@@ -1,1 +1,1 @@
-export * from "../ModelRender/render_cfd_model";
+export * from './mainPage';

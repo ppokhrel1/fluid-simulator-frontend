@@ -1,174 +1,119 @@
-.App {
-  text-align: center;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #0a0a0a;
-  color: white;
+.app {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
 }
 
-.App-header {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  padding: 1rem 2rem;
-  border-bottom: 1px solid #333;
-}
-
-.App-header h1 {
-  margin: 0 0 1rem 0;
-  font-size: 2rem;
-  background: linear-gradient(45deg, #007acc, #00a8ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.file-upload {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.upload-button {
-  background: #007acc;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  border: none;
-  font-size: 0.9rem;
-  transition: background 0.2s ease;
-}
-
-.upload-button:hover {
-  background: #005a9e;
-}
-
-.file-name {
-  color: #ccc;
-  font-size: 0.9rem;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.action-button {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  padding: 0.5rem 1rem;
-  border: 1px solid #444;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-}
-
-.action-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #007acc;
-}
-
-.action-button.export {
-  background: #28a745;
-  border-color: #28a745;
-}
-
-.action-button.export:hover {
-  background: #218838;
-  border-color: #1e7e34;
-}
-
-.App-main {
-  flex: 1;
+.threejs-container {
   position: relative;
   overflow: hidden;
 }
 
-.loading-overlay {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(0, 0, 0, 0.8);
-  padding: 2rem;
-  border-radius: 12px;
-  text-align: center;
-  z-index: 1000;
+.threejs-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #333;
-  border-top: 4px solid #007acc;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 1rem;
+/* Ensure Three.js canvas fills container */
+.threejs-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Custom scrollbar for chat */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
 
-.App-footer {
-  background: #1a1a1a;
-  padding: 1rem 2rem;
-  border-top: 1px solid #333;
-  display: flex;
-  justify-content: space-around;
-  flex-wrap: wrap;
-  gap: 2rem;
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
 }
 
-.instructions, .chat-examples {
-  text-align: left;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
 }
 
-.instructions h3, .chat-examples h3 {
-  color: #007acc;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
 }
 
-.instructions ul, .chat-examples ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Typing animation */
+.typing-dot {
+  animation: typingAnimation 1.4s infinite ease-in-out;
 }
 
-.instructions li, .chat-examples li {
-  padding: 0.25rem 0;
-  color: #ccc;
-  font-size: 0.9rem;
-}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .App-header {
-    padding: 1rem;
+@keyframes typingAnimation {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
   }
-  
-  .controls {
-    flex-direction: column;
-    gap: 1rem;
+  40% {
+    transform: scale(1);
+    opacity: 1;
   }
-  
-  .App-footer {
-    flex-direction: column;
-    gap: 1rem;
+}
+
+/* Remove Bootstrap default padding */
+.container-fluid {
+  padding-right: 0;
+  padding-left: 0;
+}
+
+/* Custom scrollbar for chat */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
+}
+
+/* Add to your App.css */
+.typing-dot {
+  animation: typingAnimation 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typingAnimation {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
   }
-  
-  .instructions, .chat-examples {
-    text-align: center;
+  40% {
+    transform: scale(1);
+    opacity: 1;
   }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.5);
 }
