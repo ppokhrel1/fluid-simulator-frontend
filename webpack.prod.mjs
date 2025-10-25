@@ -10,6 +10,11 @@ const ACCEPTABLE_LICENSES = ["MIT", "0BSD", "BSD-2-Clause", "BSD-3-Clause", "APA
 export default function () {
     return {
         mode: "production",
+        output: {
+            filename: "[name].[contenthash].js",
+            publicPath: "/fluid-simulator-frontend/", // <-- your repo name
+            clean: true, // optional: clears old files
+        },
         plugins: [
             new MiniCssExtractPlugin({
                 filename: "[name].[contenthash].css",
