@@ -122,10 +122,11 @@ export const MainPageApp: React.FC = () => {
         {/* Left Dock */}
         <div className="h-100" style={{ width: '16.666%' }}>
           <LeftDock 
-            expanded={appState.leftDockExpanded}
-            onToggle={(expanded) => updateAppState({ leftDockExpanded: expanded })}
-            onFileSelect={handleFileSelect}
-          />
+                expanded={appState.leftDockExpanded}
+                onToggle={(expanded) => updateAppState({ leftDockExpanded: expanded })}
+                onFileSelect={handleFileSelect}
+                onUploadModel={handleUploadModel} // <-- add this
+            />
         </div>
 
         {/* Three.js Center Area */}

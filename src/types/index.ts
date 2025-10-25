@@ -31,20 +31,23 @@ export interface UploadedModel {
   lastOpened: string | null;
   thumbnail?: string;
   tags: string[];
+  description?: string;
+  webLink?: string;
+  file?: File;
 }
 
 export interface AppState {
-  leftDockExpanded: boolean;
-  isTyping: boolean;
-  chatMessages: ChatMessage[];
-  selectedAiModel: string;
-  uploadedFiles: FileData[];
-  status: string;
   gridVisible: boolean;
   autoRotateEnabled: boolean;
-  currentModel?: UploadedModel;
+  chatMessages: ChatMessage[];
+  leftDockExpanded: boolean;
+  selectedAiModel: string;
+  status: string;
+  uploadedFiles: (FileData | UploadedModel)[]; // <- allow both
+  isTyping: boolean;
   view: 'main' | 'models-list';
 }
+
 
 export interface ThreeJSActions {
   loadFile: (file: File) => void;

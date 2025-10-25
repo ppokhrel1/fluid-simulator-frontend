@@ -7,18 +7,24 @@ interface LeftDockProps {
   expanded: boolean;
   onToggle: (expanded: boolean) => void;
   onFileSelect: (file: FileData) => void;
+  onUploadModel: () => void; // new prop for upload
 }
 
-const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSelect }) => {
+export const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSelect, onUploadModel }) => {
   const navigate = useNavigate();
 
   const sampleFiles: FileData[] = [
     { name: 'Car Design v2.stl', color: '#7c3aed', icon: 'fas fa-car' },
     { name: 'Airplane Wing.stl', color: '#3b82f6', icon: 'fas fa-plane' },
-    { name: 'Turbine Blade.stl', color: '#10b981', icon: 'fas fa-fan' },
-    // Add "See All Models" as another item for consistent styling
-    { name: 'See All Models', color: '#6c757d', icon: 'fas fa-list' }
+    { name: 'Turbine Blade.stl', color: '#10b981', icon: 'fas fa-fan' }
   ];
+
+  const extraButtons: FileData[] = [
+    { name: 'See All Models', color: '#6c757d', icon: 'fas fa-list' },
+    { name: 'Upload Model', color: '#0d6efd', icon: 'fas fa-upload' }
+  ];
+
+  const allItems = [...sampleFiles, ...extraButtons];
 
   return (
     <Card
@@ -31,34 +37,36 @@ const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSelect })
         <i className="fas fa-folder text-primary fs-5"></i>
       </Card.Header>
 
-      {/* Body with sample files */}
+      {/* Body with files and extra buttons */}
       <Card.Body className="d-flex flex-column align-items-center gap-2 flex-grow-1">
-        {sampleFiles.map((file, index) => (
+        {allItems.map((item, index) => (
           <OverlayTrigger
             key={index}
             placement="right"
-            overlay={<Tooltip>{file.name}</Tooltip>}
+            overlay={<Tooltip>{item.name}</Tooltip>}
           >
             <div
               className="rounded d-flex align-items-center justify-content-center cursor-pointer"
               style={{
                 width: expanded ? '100%' : '50px',
                 height: '50px',
-                background: `linear-gradient(135deg, ${file.color}, ${file.color}aa)`,
+                background: `linear-gradient(135deg, ${item.color}, ${item.color}aa)`,
                 transition: 'all 0.3s ease'
               }}
               onClick={() => {
-                if (file.name === 'See All Models') {
+                if (item.name === 'See All Models') {
                   navigate('/feed');
+                } else if (item.name === 'Upload Model') {
+                  onUploadModel();
                 } else {
-                  onFileSelect(file);
+                  onFileSelect(item);
                 }
               }}
             >
-              <i className={file.icon} style={{ color: 'white', fontSize: '20px' }}></i>
+              <i className={item.icon} style={{ color: 'white', fontSize: '20px' }}></i>
               {expanded && (
                 <small className="text-white ms-2 text-truncate" style={{ fontSize: '12px' }}>
-                  {file.name}
+                  {item.name}
                 </small>
               )}
             </div>
