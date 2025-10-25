@@ -20,6 +20,19 @@ export interface AIModel {
   description: string;
 }
 
+export interface UploadedModel {
+  id: string;
+  name: string;
+  fileName: string;
+  uploadDate: string;
+  fileSize: string;
+  type: string;
+  analysisStatus: 'pending' | 'in-progress' | 'completed' | 'error';
+  lastOpened: string | null;
+  thumbnail?: string;
+  tags: string[];
+}
+
 export interface AppState {
   leftDockExpanded: boolean;
   isTyping: boolean;
@@ -29,6 +42,8 @@ export interface AppState {
   status: string;
   gridVisible: boolean;
   autoRotateEnabled: boolean;
+  currentModel?: UploadedModel;
+  view: 'main' | 'models-list';
 }
 
 export interface ThreeJSActions {
@@ -39,3 +54,4 @@ export interface ThreeJSActions {
   toggleAutoRotate: () => void;
   takeScreenshot: () => void;
 }
+
