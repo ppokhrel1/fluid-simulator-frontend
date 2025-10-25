@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import type { FileData } from '../../types';
 
 interface LeftDockProps {
+  expanded: boolean;
+  onToggle: (value: boolean) => void;
   onFileSelect: (file: FileData) => void;
-  onUploadModel: () => void; // new prop for upload
+  onUploadModel: () => void;
 }
 
-export const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSelect, onUploadModel }) => {
+const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSelect, onUploadModel }) => {
   const navigate = useNavigate();
 
   const sampleFiles: FileData[] = [
@@ -30,12 +32,10 @@ export const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSe
       onMouseEnter={() => onToggle(true)}
       onMouseLeave={() => onToggle(false)}
     >
-      {/* Header */}
       <Card.Header className="bg-light border-secondary d-flex justify-content-center">
         <i className="fas fa-folder text-primary fs-5"></i>
       </Card.Header>
 
-      {/* Body with files and extra buttons */}
       <Card.Body className="d-flex flex-column align-items-center gap-2 flex-grow-1">
         {allItems.map((item, index) => (
           <OverlayTrigger
@@ -55,8 +55,8 @@ export const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSe
                 if (item.name === 'See All Models') {
                   navigate('/feed');
                 } else if (item.name === 'Upload Model') {
-                    navigate('/upload');
-                    //onUploadModel();
+                  navigate('/upload');
+                  onUploadModel();
                 } else {
                   onFileSelect(item);
                 }
@@ -69,10 +69,10 @@ export const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSe
                 </small>
               )}
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
+          </OverlayTrigger>
+        ))}
+      </Card.Body>
+    </Card>
   );
 };
 

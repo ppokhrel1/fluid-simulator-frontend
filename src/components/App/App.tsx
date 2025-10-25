@@ -17,7 +17,7 @@ export function App() {
       <Routes>
         <Route path="/" element={<MainPageApp />} />
         <Route path="/feed" element={<ModelsListPage 
-          onModelSelect={(model) => console.log('Selected:', model)}
+          onModelSelect={(model: any) => console.log('Selected:', model)}
           onBackToMain={() => window.history.back()}
         />} />
         <Route path="/upload" element={<UpdateModelDemo />} />
