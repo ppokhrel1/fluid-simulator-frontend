@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import type { FileData } from '../../types';
 
 interface LeftDockProps {
-  expanded: boolean;
-  onToggle: (expanded: boolean) => void;
   onFileSelect: (file: FileData) => void;
   onUploadModel: () => void; // new prop for upload
 }
@@ -71,10 +69,10 @@ export const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSe
                 </small>
               )}
             </div>
-          </OverlayTrigger>
-        ))}
-      </Card.Body>
-    </Card>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 

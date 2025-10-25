@@ -1,3 +1,60 @@
+/* Import component styles */
+@import './branding.scss';
+@import './docks.scss';
+@import './controls.scss';
+
+/* Global app styles */
+:root {
+  --app-bg: #121212;
+  --dock-bg: rgba(33, 37, 41, 0.95);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--app-bg);
+  color: white;
+  overflow: hidden;
+}
+
+/* Utility classes */
 .center {
-    text-align: center;
+  text-align: center;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.inset-0 {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Force hardware acceleration for smoother animations */
+.dock-overlay {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }

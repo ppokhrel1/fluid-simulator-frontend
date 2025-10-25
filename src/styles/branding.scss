@@ -1,0 +1,108 @@
+:root {
+  /* Brand Colors from CURFD Logo */
+  --curfd-purple: #8A4FFF;
+  --curfd-blue: #4F8AFF;
+  --curfd-dark: #0A0F29;
+  
+  /* Gradient presets */
+  --brand-gradient: linear-gradient(135deg, var(--curfd-purple), var(--curfd-blue));
+  --brand-gradient-hover: linear-gradient(135deg, #9B6FFF, #6F9BFF);
+  
+  /* Updated semantic colors */
+  --chat-bg: rgba(10, 15, 41, 0.95);
+  --chat-input-bg: rgba(255, 255, 255, 0.1);
+  --chat-border: rgba(255, 255, 255, 0.15);
+}
+
+/* Brand-specific button styles */
+.btn-brand {
+  background: var(--brand-gradient);
+  border: none;
+  color: white;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--brand-gradient-hover);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0px);
+  }
+}
+
+.chat-container {
+  background: var(--chat-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--chat-border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.chat-input {
+  background: var(--chat-input-bg);
+  border: 1px solid var(--chat-border);
+  color: white;
+  transition: all 0.2s ease;
+
+  &:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--curfd-blue);
+    box-shadow: 0 0 0 2px rgba(79, 138, 255, 0.2);
+  }
+}
+
+/* Floating Action Button style */
+.fab-container {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: var(--chat-bg);
+  backdrop-filter: blur(20px);
+  border-radius: 100px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1040;
+}
+
+.fab-button {
+  background: transparent;
+  color: white;
+  border: 1px solid var(--chat-border);
+  padding: 0.75rem 1.5rem;
+  border-radius: 100px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+
+  &:hover {
+    background: var(--chat-input-bg);
+    border-color: var(--curfd-blue);
+  }
+
+  &.active {
+    background: var(--brand-gradient);
+    border-color: transparent;
+  }
+}
+
+/* Message bubbles */
+.message-bubble {
+  max-width: 85%;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 0.5rem;
+
+  &.user {
+    background: var(--brand-gradient);
+    color: white;
+    margin-left: auto;
+  }
+
+  &.ai {
+    background: var(--chat-input-bg);
+    border: 1px solid var(--chat-border);
+    color: white;
+  }
+}

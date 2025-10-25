@@ -56,5 +56,6 @@ export interface ThreeJSActions {
   toggleGrid: () => void;
   toggleAutoRotate: () => void;
   takeScreenshot: () => void;
+  isolatePart?: (id: string) => void;
+  clearIsolation?: () => void;
 }
-
