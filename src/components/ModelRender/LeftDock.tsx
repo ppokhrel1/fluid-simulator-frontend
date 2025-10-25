@@ -57,7 +57,8 @@ export const LeftDock: React.FC<LeftDockProps> = ({ expanded, onToggle, onFileSe
                 if (item.name === 'See All Models') {
                   navigate('/feed');
                 } else if (item.name === 'Upload Model') {
-                  onUploadModel();
+                    navigate('/upload');
+                    //onUploadModel();
                 } else {
                   onFileSelect(item);
                 }

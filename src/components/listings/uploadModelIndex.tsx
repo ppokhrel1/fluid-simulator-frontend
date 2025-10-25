@@ -19,7 +19,7 @@ export const UpdateModelDemo: React.FC = () => {
     view: 'main'
   });
 
-  // Updated to accept both model metadata and the actual File object
+  // Triggered immediately when a file is selected
   const handleModelSelect = (model: UploadedModel, file: File) => {
     console.log('Model selected:', model);
     console.log('File:', file);
@@ -32,7 +32,7 @@ export const UpdateModelDemo: React.FC = () => {
       status: `Loading ${model.name}...`
     }));
 
-    // Load the actual File object into ThreeJSCanvas
+    // Load file into ThreeJSCanvas
     if (canvasRef.current) {
       canvasRef.current.loadFile(file);
     }
@@ -45,7 +45,7 @@ export const UpdateModelDemo: React.FC = () => {
 
   return (
     <div className="p-3">
-      {/* Upload Form - Now passes both model and file */}
+      {/* Upload Form */}
       <UploadModelsPage 
         onUpload={handleModelSelect}
         onCancel={handleBackToMain}

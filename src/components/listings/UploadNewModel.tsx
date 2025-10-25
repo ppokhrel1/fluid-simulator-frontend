@@ -3,7 +3,7 @@ import { Form, Alert } from 'react-bootstrap';
 import type { UploadedModel } from '../../types';
 
 interface UploadModelFormProps {
-  onUpload: (model: UploadedModel, file: File) => void; // Add file parameter
+  onUpload: (model: UploadedModel, file: File) => void;
   onCancel: () => void;
 }
 
@@ -11,9 +11,7 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [webLink, setWebLink] = useState('');
   const [tags, setTags] = useState('');
-  const [thumbnail, setThumbnail] = useState('');
   const [error, setError] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -21,8 +19,8 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
     if (!selectedFile) return;
 
     const ext = selectedFile.name.split('.').pop()?.toLowerCase() ?? '';
-
     const validTypes = ['stl', 'obj', 'glb', 'gltf', 'step', 'stp'];
+
     if (!validTypes.includes(ext)) {
       setError('Unsupported file type. Allowed: STL, OBJ, GLB, GLTF, STEP, STP');
       setFile(null);
@@ -32,41 +30,29 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
     setFile(selectedFile);
     setName(selectedFile.name);
     setError('');
+
+    // Immediately trigger upload
+    const newModel: UploadedModel = {
+      id: Date.now().toString(),
+      name: selectedFile.name,
+      fileName: selectedFile.name,
+      uploadDate: new Date().toISOString(),
+      fileSize: `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`,
+      type: ext,
+      analysisStatus: 'pending',
+      lastOpened: null,
+      thumbnail: '',
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      description,
+      webLink: ''
+    };
+
+    onUpload(newModel, selectedFile);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) {
-      setError('Please select a valid file.');
-      return;
-    }
-
-    const newModel: UploadedModel = {
-      id: Date.now().toString(),
-      name: name || file.name,
-      fileName: file.name,
-      uploadDate: new Date().toISOString(),
-      fileSize: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      type: file.name.split('.').pop()?.toLowerCase() || 'unknown',
-      analysisStatus: 'pending',
-      lastOpened: null,
-      thumbnail,
-      tags: tags.split(',').map(t => t.trim()).filter((t): t is string => t.length > 0),
-      description,
-      webLink
-    };
-
-    // Pass both the model metadata AND the actual file
-    onUpload(newModel, file);
-
-    // Reset form
-    setFile(null);
-    setName('');
-    setDescription('');
-    setWebLink('');
-    setTags('');
-    setThumbnail('');
-    setError('');
+    // Optional: keep the submit if you want metadata edits to apply
   };
 
   const getButtonClass = (variant: 'primary' | 'secondary') =>
@@ -102,37 +88,7 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
           rows={3} 
           value={description} 
           onChange={(e) => setDescription(e.target.value)} 
-          placeholder="Add any description or notes"
-        />
-      </Form.Group>
-
-      <Form.Group className="mb-3">
-        <Form.Label>Web Link</Form.Label>
-        <Form.Control 
-          type="url" 
-          value={webLink} 
-          onChange={(e) => setWebLink(e.target.value)} 
-          placeholder="Optional: link to external resource"
-        />
-      </Form.Group>
-
-      <Form.Group className="mb-3">
-        <Form.Label>Tags</Form.Label>
-        <Form.Control 
-          type="text" 
-          value={tags} 
-          onChange={(e) => setTags(e.target.value)} 
-          placeholder="Comma-separated tags (e.g., aerospace, wing)"
-        />
-      </Form.Group>
-
-      <Form.Group className="mb-3">
-        <Form.Label>Thumbnail URL</Form.Label>
-        <Form.Control 
-          type="url" 
-          value={thumbnail} 
-          onChange={(e) => setThumbnail(e.target.value)} 
-          placeholder="Optional: thumbnail image URL"
+          placeholder="Optional notes"
         />
       </Form.Group>
 
@@ -141,7 +97,7 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
           Cancel
         </button>
         <button type="submit" className={getButtonClass('primary')}>
-          Upload Model
+          Save Metadata
         </button>
       </div>
     </Form>
