@@ -68,7 +68,7 @@ const RightDock: React.FC<RightDockProps> = ({
           <select 
             value={selectedAiModel}
             onChange={(e) => onModelChange(e.target.value)}
-            className="form-select form-select-sm bg-dark text-white border-secondary"
+            className="form-select form-select-sm bg-light text-white border-secondary"
           >
             <option value="gpt-4-turbo">GPT-4 Turbo</option>
             <option value="claude-3.5">Claude 3.5</option>

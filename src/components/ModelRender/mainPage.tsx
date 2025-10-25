@@ -111,7 +111,7 @@ export const MainPageApp: React.FC = () => {
   };
 
   return (
-    <div className="app container-fluid vh-100 vw-100 p-0 m-0 bg-dark">
+    <div className="app container-fluid vh-100 vw-100 p-0 m-0 bg-light">
       {/* Header */}
       <div className="fixed-top bg-dark border-bottom border-secondary" style={{ zIndex: 1050, height: '60px' }}>
         <Header status={appState.status} />

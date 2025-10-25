@@ -27,7 +27,7 @@ const BottomControlDock: React.FC<BottomControlDockProps> = ({
   };
 
   return (
-    <div className="bg-dark bg-opacity-75 rounded-pill p-2 border border-secondary d-flex">
+    <div className="bg-light bg-opacity-75 rounded-pill p-2 border border-secondary d-flex">
       <button
         className={getButtonClass(gridVisible)}
         onClick={onToggleGrid}

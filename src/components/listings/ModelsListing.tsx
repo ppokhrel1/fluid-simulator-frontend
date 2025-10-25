@@ -126,7 +126,7 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
 
   if (loading) {
     return (
-      <div className="bg-dark min-vh-100 text-white">
+      <div className="bg-light min-vh-100 text-white">
         <Container className="py-4">
           <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
             <div className="text-center">
@@ -142,7 +142,7 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
   }
 
   return (
-    <div className="bg-dark min-vh-100 text-white">
+    <div className="bg-light min-vh-100 text-white">
       <Container className="py-4">
         {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -168,7 +168,7 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
         <Row>
           {uploadedModels.map((model) => (
             <Col key={model.id} lg={4} md={6} className="mb-4">
-              <Card className="h-100 bg-dark border-secondary hover-shadow">
+              <Card className="h-100 bg-light border-secondary hover-shadow">
                 <div className="position-relative">
                   {/* --- MODIFICATION START --- */}
                   {/* Check if the thumbnail is a valid, non-placeholder URL */}
@@ -250,7 +250,7 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
                   </div>
                 </Card.Body>
 
-                <Card.Footer className="bg-dark border-secondary">
+                <Card.Footer className="bg-light border-secondary">
                   <div className="d-grid gap-2">
                     <button 
                       className="btn btn-primary btn-sm"
