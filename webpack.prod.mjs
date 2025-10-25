@@ -4,6 +4,7 @@ import { LicenseWebpackPlugin } from "license-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import TerserPlugin from "terser-webpack-plugin";
 import packageJson from "./package.json" with { type: "json" };
+import path from "node:path";
 
 const ACCEPTABLE_LICENSES = ["MIT", "0BSD", "BSD-2-Clause", "BSD-3-Clause", "APACHE-2.0", "ISC", "Unlicense"];
 
@@ -11,6 +12,7 @@ export default function () {
     return {
         mode: "production",
         output: {
+            path: path.resolve("./dist"),
             filename: "[name].[contenthash].js",
             publicPath: "/fluid-simulator-frontend/", // <-- your repo name
             clean: true, // optional: clears old files
