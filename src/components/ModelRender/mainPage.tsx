@@ -6,6 +6,7 @@ import LeftDock from '../ModelRender/LeftDock';
 import Chatbot from '../ai_system/chatbot';
 import StorePage, { type StoreItem } from '../Store/StorePage';
 import SellDesignModal, { type SellDesignFormData } from '../ModelRender/SellDesignModal';
+import SalesModal from '../ModelRender/SalesModal';
 import AuthModal, { type UserData } from '../Auth/AuthModal';
 import CartModal, { type CartItem } from '../Store/CartModal';
 import BottomControlDock from '../ModelRender/BottomControlDock';
@@ -99,6 +100,7 @@ export const MainPageApp: React.FC = () => {
   const initialStateData = loadStateFromStorage();
   const [appState, setAppState] = useState<AppState>(initialStateData.state);
   const [showSellModal, setShowSellModal] = useState(false);
+  const [showSalesModal, setShowSalesModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -331,8 +333,8 @@ export const MainPageApp: React.FC = () => {
 
   const handleSellDesignClick = () => {
     if (user) {
-      // User is authenticated, show sell modal
-      setShowSellModal(true);
+      // User is authenticated, show sales dashboard
+      setShowSalesModal(true);
     } else {
       // User not authenticated, show auth modal first
       setShowAuthModal(true);
@@ -343,9 +345,9 @@ export const MainPageApp: React.FC = () => {
     setUser(userData);
     setShowAuthModal(false);
     updateAppState({ 
-      status: `Welcome ${userData.firstName}! You can now list your design for sale.` 
+      status: `Welcome ${userData.firstName}! You can now access your sales dashboard.` 
     });
-    // Show sell modal after successful authentication
+    // Show sell modal after successful authentication for first-time users
     setTimeout(() => {
       setShowSellModal(true);
     }, 500);
@@ -569,7 +571,7 @@ export const MainPageApp: React.FC = () => {
                 }}
               >
                 <span style={{ color: '#FFD700', fontSize: '1.1rem', fontWeight: 'bold' }}>$</span>
-                <span>Sell Design</span>
+                <span>{user ? 'Sales' : 'Sell Design'}</span>
               </button>
             )}
           </>
@@ -705,6 +707,13 @@ export const MainPageApp: React.FC = () => {
         show={showSellModal}
         onClose={() => setShowSellModal(false)}
         onSubmit={handleSellDesignSubmit}
+      />
+
+      {/* Sales Dashboard Modal */}
+      <SalesModal
+        show={showSalesModal}
+        onClose={() => setShowSalesModal(false)}
+        user={user}
       />
 
       {/* Authentication Modal */}
