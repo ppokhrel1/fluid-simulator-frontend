@@ -31,6 +31,7 @@
     "dependencies": {
         "@react-three/drei": "^10.7.6",
         "@react-three/fiber": "^9.4.0",
+        "axios": "^1.12.2",
         "bootstrap": "^5.3.8",
         "react": "^19.0.0",
         "react-bootstrap": "^2.10.10",

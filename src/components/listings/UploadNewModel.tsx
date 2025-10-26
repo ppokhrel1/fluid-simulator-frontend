@@ -1,5 +1,8 @@
+// components/UploadModelForm.tsx
 import React, { useState } from 'react';
-import { Form, Alert } from 'react-bootstrap';
+import { Form, Alert, Spinner } from 'react-bootstrap';
+import { modelsAPI } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import type { UploadedModel } from '../../types';
 
 interface UploadModelFormProps {
@@ -12,7 +15,14 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const [designer, setDesigner] = useState('');
+  const [revision, setRevision] = useState('');
+  const [units, setUnits] = useState('meters');
+  const [scaleFactor, setScaleFactor] = useState(1.0);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { user } = useAuth();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -28,31 +38,48 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
     }
 
     setFile(selectedFile);
-    setName(selectedFile.name);
+    if (!name) {
+      setName(selectedFile.name.replace(/\.[^/.]+$/, "")); // Remove extension
+    }
     setError('');
-
-    // Immediately trigger upload
-    const newModel: UploadedModel = {
-      id: Date.now().toString(),
-      name: selectedFile.name,
-      fileName: selectedFile.name,
-      uploadDate: new Date().toISOString(),
-      fileSize: `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`,
-      type: ext,
-      analysisStatus: 'pending',
-      lastOpened: null,
-      thumbnail: '',
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-      description,
-      webLink: ''
-    };
-
-    onUpload(newModel, selectedFile);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Optional: keep the submit if you want metadata edits to apply
+    if (!file || !user) return;
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('name', name || file.name);
+      formData.append('description', description);
+      formData.append('tags', JSON.stringify(tags.split(',').map(t => t.trim()).filter(Boolean)));
+      formData.append('project_name', projectName);
+      formData.append('designer', designer);
+      formData.append('revision', revision);
+      formData.append('units', units);
+      formData.append('scale_factor', scaleFactor.toString());
+      formData.append('components', '[]'); // Empty components array for now
+
+      const model = await modelsAPI.upload(formData);
+      onUpload(model, file);
+      
+      // Reset form
+      setFile(null);
+      setName('');
+      setDescription('');
+      setTags('');
+      setProjectName('');
+      setDesigner('');
+      setRevision('');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Upload failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getButtonClass = (variant: 'primary' | 'secondary') =>
@@ -63,21 +90,25 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
       {error && <Alert variant="danger">{error}</Alert>}
 
       <Form.Group className="mb-3">
-        <Form.Label>3D Model File</Form.Label>
+        <Form.Label>3D Model File *</Form.Label>
         <Form.Control 
           type="file" 
           accept=".stl,.obj,.glb,.gltf,.step,.stp" 
           onChange={handleFileChange} 
+          required
+          disabled={loading}
         />
       </Form.Group>
 
       <Form.Group className="mb-3">
-        <Form.Label>Name</Form.Label>
+        <Form.Label>Model Name *</Form.Label>
         <Form.Control 
           type="text" 
           value={name} 
           onChange={(e) => setName(e.target.value)} 
-          placeholder="Optional, will use file name if empty"
+          placeholder="Enter model name"
+          required
+          disabled={loading}
         />
       </Form.Group>
 
@@ -88,16 +119,102 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
           rows={3} 
           value={description} 
           onChange={(e) => setDescription(e.target.value)} 
-          placeholder="Optional notes"
+          placeholder="Optional description"
+          disabled={loading}
+        />
+      </Form.Group>
+
+      <Form.Group className="mb-3">
+        <Form.Label>Tags</Form.Label>
+        <Form.Control 
+          type="text" 
+          value={tags} 
+          onChange={(e) => setTags(e.target.value)} 
+          placeholder="Comma-separated tags: aerodynamics, vehicle, etc."
+          disabled={loading}
+        />
+      </Form.Group>
+
+      <div className="row">
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label>Project Name</Form.Label>
+            <Form.Control 
+              type="text" 
+              value={projectName} 
+              onChange={(e) => setProjectName(e.target.value)} 
+              disabled={loading}
+            />
+          </Form.Group>
+        </div>
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label>Designer</Form.Label>
+            <Form.Control 
+              type="text" 
+              value={designer} 
+              onChange={(e) => setDesigner(e.target.value)} 
+              disabled={loading}
+            />
+          </Form.Group>
+        </div>
+      </div>
+
+      <div className="row">
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label>Revision</Form.Label>
+            <Form.Control 
+              type="text" 
+              value={revision} 
+              onChange={(e) => setRevision(e.target.value)} 
+              disabled={loading}
+            />
+          </Form.Group>
+        </div>
+        <div className="col-md-6">
+          <Form.Group className="mb-3">
+            <Form.Label>Units</Form.Label>
+            <Form.Select 
+              value={units} 
+              onChange={(e) => setUnits(e.target.value)}
+              disabled={loading}
+            >
+              <option value="meters">Meters</option>
+              <option value="millimeters">Millimeters</option>
+              <option value="inches">Inches</option>
+              <option value="feet">Feet</option>
+            </Form.Select>
+          </Form.Group>
+        </div>
+      </div>
+
+      <Form.Group className="mb-3">
+        <Form.Label>Scale Factor</Form.Label>
+        <Form.Control 
+          type="number" 
+          step="0.1"
+          value={scaleFactor} 
+          onChange={(e) => setScaleFactor(parseFloat(e.target.value))}
+          disabled={loading}
         />
       </Form.Group>
 
       <div className="d-flex justify-content-between">
-        <button type="button" className={getButtonClass('secondary')} onClick={onCancel}>
+        <button 
+          type="button" 
+          className={getButtonClass('secondary')} 
+          onClick={onCancel}
+          disabled={loading}
+        >
           Cancel
         </button>
-        <button type="submit" className={getButtonClass('primary')}>
-          Save Metadata
+        <button 
+          type="submit" 
+          className={getButtonClass('primary')}
+          disabled={!file || loading}
+        >
+          {loading ? <Spinner animation="border" size="sm" /> : 'Upload Model'}
         </button>
       </div>
     </Form>

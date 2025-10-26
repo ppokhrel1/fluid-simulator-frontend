@@ -1,90 +1,38 @@
+// components/listings/ModelsListing.tsx
 import React, { useState, useEffect } from 'react';
-import { Card, Badge, Row, Col, Container } from 'react-bootstrap';
-import type { FileData, UploadedModel } from '../../types';
+import { Card, Badge, Row, Col, Container, Spinner } from 'react-bootstrap';
+import { modelsAPI } from '../../services/api';
+import { backendToFrontendModel } from '../../utils/transform';
+import type { UploadedModel, UploadedModelCamelCase } from '../../types';
 
 interface ModelsListPageProps {
-  onModelSelect: (model: UploadedModel) => void;
+  onModelSelect: (model: UploadedModelCamelCase) => void;
   onBackToMain: () => void;
 }
 
 export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, onBackToMain }) => {
-  const [uploadedModels, setUploadedModels] = useState<UploadedModel[]>([]);
+  const [uploadedModels, setUploadedModels] = useState<UploadedModelCamelCase[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Test data (retained)
-  const testModels: UploadedModel[] = [
-    {
-      id: '1',
-      name: 'Car Design v2.stl',
-      fileName: 'Car Design v2.stl',
-      uploadDate: '2024-01-15T10:30:00Z',
-      fileSize: '2.4 MB',
-      type: 'stl',
-      analysisStatus: 'completed',
-      lastOpened: '2024-01-16T14:20:00Z',
-      // This is a valid external URL
-      thumbnail: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQU2_3Bc48L58cNSMvnWkHQMCh2Ue9jNIC6kw&s',
-      tags: ['vehicle', 'aerodynamics']
-    },
-    {
-      id: '2',
-      name: 'Airplane Wing.stl',
-      fileName: 'Airplane Wing.stl',
-      uploadDate: '2024-01-14T16:45:00Z',
-      fileSize: '1.8 MB',
-      type: 'stl',
-      analysisStatus: 'completed',
-      lastOpened: '2024-01-15T09:15:00Z',
-      // This is a placeholder URL, so the fallback icon will display
-      thumbnail: 'https://media.printables.com/media/prints/768011/images/5979348_a352c031-c3ea-4c4a-9265-edc84a2e2fe8_d49f1449-a16b-452b-8894-2d3c9acbeb53/thumbs/inside/1280x960/png/screen-shot-2024-02-16-at-51843-pm.webp', 
-      tags: ['aerospace', 'wing']
-    },
-    {
-      id: '3',
-      name: 'Turbine Blade.stl',
-      fileName: 'Turbine Blade.stl',
-      uploadDate: '2024-01-13T11:20:00Z',
-      fileSize: '3.1 MB',
-      type: 'stl',
-      analysisStatus: 'in-progress',
-      lastOpened: '2024-01-14T10:30:00Z',
-      // Use a different valid URL for demonstration
-      thumbnail: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmiO1QxCldQwWTMRMYEH5mN84-UHqLSg03CQ&s',
-      tags: ['energy', 'blade']
-    },
-    {
-      id: '4',
-      name: 'Building Structure.obj',
-      fileName: 'Building Structure.obj',
-      uploadDate: '2024-01-12T08:15:00Z',
-      fileSize: '5.2 MB',
-      type: 'obj',
-      analysisStatus: 'completed',
-      lastOpened: '2024-01-13T16:45:00Z',
-      thumbnail: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTy8Lfol3dmMkE5nv_LcUWL6LmZkuwGfkBmFQ&s',
-      tags: ['architecture', 'structural']
-    },
-    {
-      id: '5',
-      name: 'Drone Frame.glb',
-      fileName: 'Drone Frame.glb',
-      uploadDate: '2024-01-11T14:30:00Z',
-      fileSize: '4.7 MB',
-      type: 'glb',
-      analysisStatus: 'pending',
-      lastOpened: null,
-      thumbnail: 'https://content.instructables.com/FK2/TEUK/I3THY4DM/FK2TEUKI3THY4DM.jpg?auto=webp&frame=1&width=2100',
-      tags: ['uav', 'frame']
-    }
-  ];
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Simulate API call to fetch models
-    setTimeout(() => {
-      setUploadedModels(testModels);
-      setLoading(false);
-    }, 1000);
+    fetchModels();
   }, []);
+
+  const fetchModels = async () => {
+    try {
+      setLoading(true);
+      const models: UploadedModel[] = await modelsAPI.getAll();
+      // Convert backend snake_case to frontend camelCase
+      const camelCaseModels = models.map(model => backendToFrontendModel(model));
+      setUploadedModels(camelCaseModels);
+    } catch (err: any) {
+      setError('Failed to load models');
+      console.error('Error fetching models:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -113,7 +61,8 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
     return iconMap[type] || 'fas fa-file';
   };
 
-  const formatDate = (dateString: string | null) => {
+  // Fix: Update formatDate to accept string | null | undefined
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Never';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -130,11 +79,23 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
         <Container className="py-4">
           <div className="d-flex justify-content-center align-items-center" style={{ height: '50vh' }}>
             <div className="text-center">
-              <div className="spinner-border text-primary mb-3" role="status">
+              <Spinner animation="border" role="status" className="mb-3">
                 <span className="visually-hidden">Loading...</span>
-              </div>
+              </Spinner>
               <p>Loading your models...</p>
             </div>
+          </div>
+        </Container>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-light min-vh-100 text-white">
+        <Container className="py-4">
+          <div className="alert alert-danger" role="alert">
+            {error}
           </div>
         </Container>
       </div>
@@ -170,32 +131,29 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
             <Col key={model.id} lg={4} md={6} className="mb-4">
               <Card className="h-100 bg-light border-secondary hover-shadow">
                 <div className="position-relative">
-                  {/* --- MODIFICATION START --- */}
-                  {/* Check if the thumbnail is a valid, non-placeholder URL */}
-                  {model.thumbnail && !model.thumbnail.includes('/api/placeholder') ? (
+                  {model.thumbnail ? (
                     <Card.Img 
                       variant="top" 
                       src={model.thumbnail} 
                       alt={`Thumbnail for ${model.name}`}
                       style={{ 
                         height: '200px', 
-                        objectFit: 'cover', // Ensures image covers the area
+                        objectFit: 'cover',
                         borderTopLeftRadius: '0.375rem', 
                         borderTopRightRadius: '0.375rem' 
                       }}
                     />
                   ) : (
-                    // Fallback to the icon placeholder if no valid thumbnail is present
                     <div 
                       className="bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center"
                       style={{ height: '200px', borderTopLeftRadius: '0.375rem', borderTopRightRadius: '0.375rem' }}
                     >
-                      <i className={`${getFileIcon(model.type)} text-primary`} style={{ fontSize: '3rem' }}></i>
+                      {/* Use fileType (camelCase) */}
+                      <i className={`${getFileIcon(model.fileType)} text-primary`} style={{ fontSize: '3rem' }}></i>
                     </div>
                   )}
-                  {/* --- MODIFICATION END --- */}
                   
-                  {/* Status Badge */}
+                  {/* Status Badge - use analysisStatus (camelCase) */}
                   <div className="position-absolute top-0 end-0 m-2">
                     {getStatusBadge(model.analysisStatus)}
                   </div>
@@ -205,8 +163,9 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
                   <div className="mb-2">
                     <h6 className="card-title text-white mb-1">{model.name}</h6>
                     <small className="text-muted">
-                      <i className={`${getFileIcon(model.type)} me-1`}></i>
-                      {model.type.toUpperCase()} • {model.fileSize}
+                      {/* Use fileType and fileSize (camelCase) */}
+                      <i className={`${getFileIcon(model.fileType)} me-1`}></i>
+                      {model.fileType.toUpperCase()} • {model.fileSize}
                     </small>
                   </div>
 
@@ -240,10 +199,12 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
                     <div className="d-flex justify-content-between text-muted small">
                       <div>
                         <i className="fas fa-calendar me-1"></i>
-                        {formatDate(model.uploadDate)}
+                        {/* Use createdAt (camelCase) */}
+                        {formatDate(model.createdAt)}
                       </div>
                       <div>
                         <i className="fas fa-clock me-1"></i>
+                        {/* Use lastOpened (camelCase) */}
                         {formatDate(model.lastOpened)}
                       </div>
                     </div>
@@ -266,7 +227,7 @@ export const ModelsListPage: React.FC<ModelsListPageProps> = ({ onModelSelect, o
           ))}
         </Row>
 
-        {/* Empty State (retained) */}
+        {/* Empty State */}
         {uploadedModels.length === 0 && (
           <div className="text-center py-5">
             <div className="mb-4">

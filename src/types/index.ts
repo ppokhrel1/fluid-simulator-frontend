@@ -21,19 +21,57 @@ export interface AIModel {
 }
 
 export interface UploadedModel {
-  id: string;
+  id: number;
+  name: string;
+  file_name: string;  // snake_case to match backend
+  file_size: string;  // snake_case to match backend
+  file_type: string;  // snake_case to match backend
+  description?: string;
+  web_link?: string;
+  tags: string[];
+  thumbnail?: string;
+  project_name?: string;
+  designer?: string;
+  revision?: string;
+  units: string;
+  scale_factor: number;
+  fluid_density: number;
+  fluid_viscosity: number;
+  velocity_inlet?: number;
+  temperature_inlet?: number;
+  pressure_outlet?: number;
+  analysis_status: string;  // snake_case to match backend
+  last_opened?: string;     // snake_case to match backend
+  created_at: string;       // snake_case to match backend
+  updated_at: string;
+  created_by_user_id: number;
+}
+
+export interface UploadedModelCamelCase {
+  id: number;
   name: string;
   fileName: string;
-  uploadDate: string;
   fileSize: string;
-  type: string;
-  analysisStatus: 'pending' | 'in-progress' | 'completed' | 'error';
-  lastOpened: string | null;
-  thumbnail?: string;
-  tags: string[];
+  fileType: string;
   description?: string;
   webLink?: string;
-  file?: File;
+  tags: string[];
+  thumbnail?: string;
+  projectName?: string;
+  designer?: string;
+  revision?: string;
+  units: string;
+  scaleFactor: number;
+  fluidDensity: number;
+  fluidViscosity: number;
+  velocityInlet?: number;
+  temperatureInlet?: number;
+  pressureOutlet?: number;
+  analysisStatus: string;
+  lastOpened?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdByUserId: number;
 }
 
 export interface AppState {
