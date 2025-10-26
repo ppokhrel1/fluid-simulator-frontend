@@ -4,36 +4,108 @@ import ControlsHint from '../ModelRender/ControlsHint';
 import Header from '../ModelRender/Header';
 import LeftDock from '../ModelRender/LeftDock';
 import Chatbot from '../ai_system/chatbot';
-import StorePage from '../Store/StorePage';
+import StorePage, { type StoreItem } from '../Store/StorePage';
 import SellDesignModal, { type SellDesignFormData } from '../ModelRender/SellDesignModal';
+import AuthModal, { type UserData } from '../Auth/AuthModal';
+import CartModal, { type CartItem } from '../Store/CartModal';
 import BottomControlDock from '../ModelRender/BottomControlDock';
 import PressureLegend from '../ModelRender/PressureLegend';
 import type { AppState, ThreeJSActions, FileData, ChatMessage } from '../../types';
 import { sendMessageToAI } from '../ai_system/aiAdapter';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export const MainPageApp: React.FC = () => {
-  const [appState, setAppState] = useState<AppState>({
-    leftDockExpanded: false,
-    isTyping: false,
-    chatMessages: [
-      {
-        type: 'ai',
-        content: 'Hello! I\'m CURFD AI. Upload a 3D model to begin CFD analysis.',
-        time: new Date().toLocaleTimeString()
+  // Helper functions for localStorage persistence
+  const saveStateToStorage = (state: AppState, hasFile: boolean, userData: UserData | null) => {
+    try {
+      const stateToSave = {
+        ...state,
+        // Don't save chat messages as they can get large and are not essential
+        chatMessages: state.chatMessages.slice(-5), // Keep only last 5 messages
+      };
+      localStorage.setItem('curfd-app-state', JSON.stringify(stateToSave));
+      localStorage.setItem('curfd-has-uploaded-file', JSON.stringify(hasFile));
+      if (userData) {
+        localStorage.setItem('curfd-user-data', JSON.stringify(userData));
+      } else {
+        localStorage.removeItem('curfd-user-data');
       }
-    ],
-    selectedAiModel: 'gpt-4-turbo',
-    uploadedFiles: [],
-    status: 'Ready for analysis',
-    gridVisible: true,
-    autoRotateEnabled: false,
-    view: 'main'
-  });
+    } catch (error) {
+      console.warn('Failed to save state to localStorage:', error);
+    }
+  };
 
+  const loadStateFromStorage = () => {
+    try {
+      const savedState = localStorage.getItem('curfd-app-state');
+      const savedHasFile = localStorage.getItem('curfd-has-uploaded-file');
+      const savedUser = localStorage.getItem('curfd-user-data');
+      
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        // Merge with default state to ensure all properties exist
+        return {
+          state: {
+            leftDockExpanded: false,
+            isTyping: false,
+            chatMessages: [
+              {
+                type: 'ai',
+                content: 'Hello! I\'m CURFD AI. Upload a 3D model to begin CFD analysis.',
+                time: new Date().toLocaleTimeString()
+              }
+            ],
+            selectedAiModel: 'gpt-4-turbo',
+            uploadedFiles: [],
+            status: 'Ready for analysis',
+            gridVisible: true,
+            autoRotateEnabled: false,
+            view: 'main',
+            ...parsedState
+          } as AppState,
+          hasFile: savedHasFile ? JSON.parse(savedHasFile) : false,
+          user: savedUser ? JSON.parse(savedUser) : null
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to load state from localStorage:', error);
+    }
+    
+    return {
+      state: {
+        leftDockExpanded: false,
+        isTyping: false,
+        chatMessages: [
+          {
+            type: 'ai',
+            content: 'Hello! I\'m CURFD AI. Upload a 3D model to begin CFD analysis.',
+            time: new Date().toLocaleTimeString()
+          }
+        ],
+        selectedAiModel: 'gpt-4-turbo',
+        uploadedFiles: [],
+        status: 'Ready for analysis',
+        gridVisible: true,
+        autoRotateEnabled: false,
+        view: 'main'
+      } as AppState,
+      hasFile: false,
+      user: null
+    };
+  };
+
+  // Load initial state from localStorage
+  const initialStateData = loadStateFromStorage();
+  const [appState, setAppState] = useState<AppState>(initialStateData.state);
   const [showSellModal, setShowSellModal] = useState(false);
-  const [hasUploadedFile, setHasUploadedFile] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [user, setUser] = useState<UserData | null>(initialStateData.user);
+  const [hasUploadedFile, setHasUploadedFile] = useState(initialStateData.hasFile);
   const [controlsHintTop, setControlsHintTop] = useState<number>(0);
+  const [wasRefreshedInStore, setWasRefreshedInStore] = useState(initialStateData.state.view === 'store' && initialStateData.hasFile);
   const threeRef = useRef<ThreeJSActions>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +113,76 @@ export const MainPageApp: React.FC = () => {
   const updateAppState = (updates: Partial<AppState>) => {
     setAppState(prev => ({ ...prev, ...updates }));
   };
+
+  // Save state to localStorage whenever appState, hasUploadedFile, or user changes
+  useEffect(() => {
+    saveStateToStorage(appState, hasUploadedFile, user);
+  }, [appState, hasUploadedFile, user]);
+
+  // Restore 3D model and other state after component mounts
+  useEffect(() => {
+    const restoreState = async () => {
+      console.log('RestoreState - hasUploadedFile:', hasUploadedFile, 'view:', appState.view, 'uploadedFiles:', appState.uploadedFiles);
+      
+      // Small delay to ensure ThreeJS canvas is ready
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (hasUploadedFile) {
+        if (appState.uploadedFiles.length > 0) {
+          const fileInfo = appState.uploadedFiles[0];
+          console.log('Attempting to restore file:', fileInfo.name, 'in view:', appState.view);
+          
+          if (appState.view === 'main') {
+            updateAppState({ status: 'Restoring previous model...' });
+            
+            // Since we can't actually restore the 3D model after refresh, 
+            // prompt user to re-upload
+            setTimeout(() => {
+              updateAppState({ 
+                status: `Please re-upload ${fileInfo.name} to continue analysis` 
+              });
+              setHasUploadedFile(false);
+              updateAppState({ uploadedFiles: [] });
+            }, 2000);
+          }
+        }
+      }
+    };
+
+    restoreState();
+  }, []);
+
+  // Watch for view changes 
+  useEffect(() => {
+    console.log('View changed to:', appState.view, 'hasUploadedFile:', hasUploadedFile);
+    
+    // When switching to main view, check if we need to handle file restoration
+    if (appState.view === 'main' && hasUploadedFile && appState.uploadedFiles.length > 0) {
+      const fileInfo = appState.uploadedFiles[0];
+      console.log('In main view with file info:', fileInfo.name);
+      
+      // Give the ThreeJS canvas a moment to be ready, then check if model is actually loaded
+      setTimeout(() => {
+        // Since we can't reliably detect if the 3D model is actually loaded after a refresh,
+        // we'll prompt the user to re-upload when we have file metadata but potentially no loaded model
+        if (wasRefreshedInStore) {
+          console.log('Was refreshed in store, prompting re-upload');
+          setWasRefreshedInStore(false);
+          updateAppState({ 
+            status: `Session restored. Please re-upload ${fileInfo.name} to continue analysis.` 
+          });
+          
+          setTimeout(() => {
+            setHasUploadedFile(false);
+            updateAppState({ 
+              uploadedFiles: [],
+              status: 'Ready for analysis'
+            });
+          }, 3000);
+        }
+      }, 500);
+    }
+  }, [appState.view]);
 
   const handleThreeAction = (action: keyof ThreeJSActions, data?: any) => {
     console.log(`Three action: ${action}`, data);
@@ -68,6 +210,17 @@ export const MainPageApp: React.FC = () => {
     if (file) {
       handleThreeAction('loadFile', file);
       setHasUploadedFile(true); // ensure UI updates when uploaded from chat panel
+      
+      // Update app state with file information
+      updateAppState({ 
+        status: `Loading ${file.name}...`,
+        uploadedFiles: [{ 
+          name: file.name, 
+          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          color: '#4CAF50',
+          icon: 'fas fa-cube'
+        }]
+      });
     }
     handleThreeAction('processMessage', { message, file });
 
@@ -108,8 +261,26 @@ export const MainPageApp: React.FC = () => {
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('File input changed', e.target.files);
     if (e.target.files?.[0]) {
-      handleThreeAction('loadFile', e.target.files[0]);
+      const file = e.target.files[0];
+      handleThreeAction('loadFile', file);
       setHasUploadedFile(true); // Track that a file has been uploaded
+      
+      // Update app state with file information
+      updateAppState({ 
+        status: `Loading ${file.name}...`,
+        uploadedFiles: [{ 
+          name: file.name, 
+          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+          color: '#4CAF50',
+          icon: 'fas fa-cube'
+        }]
+      });
+      
+      // Update status after load
+      setTimeout(() => {
+        updateAppState({ status: `${file.name} loaded - Analysis ready` });
+      }, 1000);
+      
       // Reset the input to allow uploading the same file again
       e.target.value = '';
     }
@@ -158,10 +329,84 @@ export const MainPageApp: React.FC = () => {
     handleThreeAction('toggleAutoRotate');
   };
 
+  const handleSellDesignClick = () => {
+    if (user) {
+      // User is authenticated, show sell modal
+      setShowSellModal(true);
+    } else {
+      // User not authenticated, show auth modal first
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleAuthSuccess = (userData: UserData) => {
+    setUser(userData);
+    setShowAuthModal(false);
+    updateAppState({ 
+      status: `Welcome ${userData.firstName}! You can now list your design for sale.` 
+    });
+    // Show sell modal after successful authentication
+    setTimeout(() => {
+      setShowSellModal(true);
+    }, 500);
+  };
+
   const handleSellDesignSubmit = (formData: SellDesignFormData) => {
-    console.log('Design submitted for sale:', formData);
-    // TODO: Implement API call to backend to save the design listing
-    updateAppState({ status: 'Design submitted successfully!' });
+    console.log('Design submitted for sale:', formData, 'by user:', user);
+    // TODO: Implement API call to backend to save the design listing with user information
+    updateAppState({ 
+      status: `${formData.designName} listed successfully! It will be reviewed and published soon.` 
+    });
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    updateAppState({ status: 'Logged out successfully.' });
+  };
+
+  // Cart handling functions
+  const handleAddToCart = (item: StoreItem) => {
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
+      
+      if (existingItem) {
+        return prevItems.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      } else {
+        const newCartItem: CartItem = {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          originalPrice: item.originalPrice,
+          size: item.size || '0 MB',
+          color: item.color,
+          icon: item.icon,
+          quantity: 1
+        };
+        return [...prevItems, newCartItem];
+      }
+    });
+  };
+
+  const handleUpdateCartQuantity = (id: string, quantity: number) => {
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const handleRemoveFromCart = (id: string) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+  };
+
+  const handleCheckout = () => {
+    console.log('Proceeding to checkout with items:', cartItems);
+    alert('Checkout functionality will be implemented in the next phase!');
+    setShowCartModal(false);
   };
 
   return (
@@ -180,22 +425,73 @@ export const MainPageApp: React.FC = () => {
             <small className="text-white-50">V3 - Advanced AI CFD Engine</small>
           </div>
         </div>
-        <div className="ms-auto">
+        <div className="ms-auto d-flex align-items-center gap-3">
+          {user && (
+            <div className="d-flex align-items-center gap-2">
+              <div 
+                className="rounded-circle d-flex align-items-center justify-content-center"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '0.9rem'
+                }}
+              >
+                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+              </div>
+              <div className="d-flex flex-column">
+                <small className="text-white" style={{ fontSize: '0.8rem', lineHeight: 1 }}>
+                  {user.firstName} {user.lastName}
+                </small>
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#667eea',
+                    fontSize: '0.7rem',
+                    padding: 0,
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    lineHeight: 1
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          )}
           <span className="text-white-50">{appState.status}</span>
         </div>
       </div>
 
-      {/* Main Content - Fullscreen 3D */}
-      {appState.view === 'store' ? (
-        <StorePage onBack={() => updateAppState({ view: 'main' })} />
-      ) : (
-        <div className="position-fixed inset-0 w-100 h-100" style={{ top: '60px' }}>
-          <ThreeJSCanvas 
-            ref={threeRef}
-            onStateUpdate={updateAppState}
-            appState={appState}
-          />
-        </div>
+      {/* Main Content - Fullscreen 3D - Always mounted but hidden when in store view */}
+      <div 
+        className="position-fixed inset-0 w-100 h-100" 
+        style={{ 
+          top: '60px',
+          opacity: appState.view === 'main' ? 1 : 0,
+          pointerEvents: appState.view === 'main' ? 'auto' : 'none',
+          zIndex: appState.view === 'main' ? 1 : -1
+        }}
+      >
+        <ThreeJSCanvas 
+          ref={threeRef}
+          onStateUpdate={updateAppState}
+          appState={appState}
+        />
+      </div>
+
+      {/* Store Page - Overlay when in store view */}
+      {appState.view === 'store' && (
+        <StorePage 
+          onBack={() => updateAppState({ view: 'main' })}
+          cartItems={cartItems}
+          onAddToCart={handleAddToCart}
+          onShowCart={() => setShowCartModal(true)}
+        />
       )}
 
       {/* Floating Chatbot Panel */}
@@ -207,9 +503,9 @@ export const MainPageApp: React.FC = () => {
         />
       </div>
 
-      {/* Controls hint overlay - placed below the chatbot, persistent while a file is uploaded */}
+      {/* Controls hint overlay - placed below the chatbot, persistent while a file is uploaded - Only show in main view */}
       <ControlsHint 
-        visible={hasUploadedFile} 
+        visible={hasUploadedFile && appState.view === 'main'} 
         onClose={() => { /* persistent - no dismiss */ }}
         placement={{ top: controlsHintTop, right: 16 }}
       />
@@ -263,7 +559,7 @@ export const MainPageApp: React.FC = () => {
             {hasUploadedFile && (
               <button
                 className="fab-button"
-                onClick={() => setShowSellModal(true)}
+                onClick={handleSellDesignClick}
                 style={{ 
                   minWidth: '140px',
                   display: 'flex',
@@ -299,12 +595,31 @@ export const MainPageApp: React.FC = () => {
             </button>
             <button
               className="fab-button"
-              onClick={() => console.log('My Cart')}
+              onClick={() => setShowCartModal(true)}
+              style={{ position: 'relative' }}
             >
+              <i className="fas fa-shopping-cart me-2"></i>
               Cart
+              {cartItems.length > 0 && (
+                <span 
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                  style={{
+                    background: '#dc3545',
+                    fontSize: '0.7rem',
+                    minWidth: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                </span>
+              )}
             </button>
           </>
         )}
+      </div>
 
         {/* Hidden file input */}
         <input
@@ -314,7 +629,6 @@ export const MainPageApp: React.FC = () => {
           accept=".stl,.obj,.step,.stp,.iges,.glb"
           onChange={handleFileInputChange}
         />
-        </div>
 
         {/* Pressure Distribution Legend - Only show in main view */}
         {appState.view === 'main' && (
@@ -392,6 +706,26 @@ export const MainPageApp: React.FC = () => {
         onClose={() => setShowSellModal(false)}
         onSubmit={handleSellDesignSubmit}
       />
-      </div>
-    );
-  };export default MainPageApp;
+
+      {/* Authentication Modal */}
+      <AuthModal
+        show={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={handleAuthSuccess}
+        initialMode="signup"
+      />
+
+      {/* Cart Modal */}
+      <CartModal
+        show={showCartModal}
+        onClose={() => setShowCartModal(false)}
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateCartQuantity}
+        onRemoveItem={handleRemoveFromCart}
+        onCheckout={handleCheckout}
+      />
+    </div>
+  );
+};
+
+export default MainPageApp;

@@ -1,4 +1,3 @@
-// components/UploadModelForm.tsx
 import React, { useState } from 'react';
 import { Form, Alert, Spinner } from 'react-bootstrap';
 import { modelsAPI } from '../../services/api';
@@ -26,7 +25,13 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (!selectedFile) return;
+    console.log('Selected file:', selectedFile); // Debug log
+    
+    if (!selectedFile) {
+      console.log('No file selected'); // Debug log
+      setError('Please select a file');
+      return;
+    }
 
     const ext = selectedFile.name.split('.').pop()?.toLowerCase() ?? '';
     const validTypes = ['stl', 'obj', 'glb', 'gltf', 'step', 'stp'];
@@ -38,6 +43,8 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
     }
 
     setFile(selectedFile);
+    console.log('File state set:', selectedFile.name); // Debug log
+    
     if (!name) {
       setName(selectedFile.name.replace(/\.[^/.]+$/, "")); // Remove extension
     }
@@ -46,7 +53,22 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !user) return;
+    console.log('Submitting form with file:', "hello"); // Debug log
+    // Enhanced validation
+    if (!file) {
+      setError('Please select a file first');
+      return;
+    }
+    
+    if (!user) {
+      setError('User not authenticated');
+      return;
+    }
+
+    if (!name.trim()) {
+      setError('Please enter a model name');
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -98,6 +120,11 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
           required
           disabled={loading}
         />
+        {file && (
+          <Form.Text className="text-success">
+            Selected: {file.name}
+          </Form.Text>
+        )}
       </Form.Group>
 
       <Form.Group className="mb-3">
@@ -194,6 +221,8 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
         <Form.Control 
           type="number" 
           step="0.1"
+          min="0.1"
+          max="10"
           value={scaleFactor} 
           onChange={(e) => setScaleFactor(parseFloat(e.target.value))}
           disabled={loading}
@@ -213,6 +242,7 @@ const UploadModelForm: React.FC<UploadModelFormProps> = ({ onUpload, onCancel })
           type="submit" 
           className={getButtonClass('primary')}
           disabled={!file || loading}
+          onClick={handleSubmit}
         >
           {loading ? <Spinner animation="border" size="sm" /> : 'Upload Model'}
         </button>

@@ -23,14 +23,14 @@ export default function () {
             }),
             new LicenseWebpackPlugin({
                 outputFilename: "third-party-licenses.txt",
-                unacceptableLicenseTest: (licenseIdentifier) => {
-                    const licenses = licenseIdentifier.replace(/[()]/g, "").split(" OR ");
-                    return licenses.every((licenseName) => {
-                        return !ACCEPTABLE_LICENSES.map((name) => name.toLowerCase()).includes(
-                            licenseName.toLowerCase()
-                        );
-                    });
-                },
+                // unacceptableLicenseTest: (licenseIdentifier) => {
+                //     const licenses = licenseIdentifier.replace(/[()]/g, "").split(" OR ");
+                //     return licenses.every((licenseName) => {
+                //         return !ACCEPTABLE_LICENSES.map((name) => name.toLowerCase()).includes(
+                //             licenseName.toLowerCase()
+                //         );
+                //     });
+                // },
                 perChunkOutput: false,
                 skipChildCompilers: true,
                 excludedPackageTest: (packageName) => {

@@ -6,7 +6,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import MainPageApp from '../ModelRender/mainPage'; // Assuming you have these components
 import './App.css';
 import ModelsListPage from '../listings/ModelsListing';
-import { UpdateModelDemo } from '../listings/uploadModelIndex';
+import { UpdateModelDemo } from '../listings/UploadModelDemo';
 import LoginPage from '../listings/LoginPage';
 import { AuthProvider } from '~/contexts/AuthContext';
 

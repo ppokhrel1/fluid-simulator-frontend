@@ -37,7 +37,7 @@ api.interceptors.response.use(
 export const modelsAPI = {
   // Upload model
   upload: async (formData: FormData) => {
-    const response = await api.post('/models/upload', formData, {
+    const response = await api.post('/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
