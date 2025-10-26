@@ -1,9 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ThreeJSCanvas from '../ModelRender/ThreeJSCanvas';
+import ControlsHint from '../ModelRender/ControlsHint';
 import Header from '../ModelRender/Header';
 import LeftDock from '../ModelRender/LeftDock';
 import Chatbot from '../ai_system/chatbot';
 import StorePage from '../Store/StorePage';
+import SellDesignModal, { type SellDesignFormData } from '../ModelRender/SellDesignModal';
 import BottomControlDock from '../ModelRender/BottomControlDock';
 import PressureLegend from '../ModelRender/PressureLegend';
 import type { AppState, ThreeJSActions, FileData, ChatMessage } from '../../types';
@@ -29,8 +31,12 @@ export const MainPageApp: React.FC = () => {
     view: 'main'
   });
 
+  const [showSellModal, setShowSellModal] = useState(false);
+  const [hasUploadedFile, setHasUploadedFile] = useState(false);
+  const [controlsHintTop, setControlsHintTop] = useState<number>(0);
   const threeRef = useRef<ThreeJSActions>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const updateAppState = (updates: Partial<AppState>) => {
     setAppState(prev => ({ ...prev, ...updates }));
@@ -61,6 +67,7 @@ export const MainPageApp: React.FC = () => {
     // forward to ThreeJS processor if a file was uploaded or the message relates to the scene
     if (file) {
       handleThreeAction('loadFile', file);
+      setHasUploadedFile(true); // ensure UI updates when uploaded from chat panel
     }
     handleThreeAction('processMessage', { message, file });
 
@@ -102,10 +109,37 @@ export const MainPageApp: React.FC = () => {
     console.log('File input changed', e.target.files);
     if (e.target.files?.[0]) {
       handleThreeAction('loadFile', e.target.files[0]);
+      setHasUploadedFile(true); // Track that a file has been uploaded
       // Reset the input to allow uploading the same file again
       e.target.value = '';
     }
   };
+
+  // Position the ControlsHint just below the chatbot dynamically
+  useEffect(() => {
+    const updatePosition = () => {
+      const el = chatContainerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      // place with 12px gap below the chat container
+      setControlsHintTop(rect.top + rect.height + 12);
+    };
+
+    updatePosition();
+
+    // Observe resize of the chat container to keep placement correct
+    const el = chatContainerRef.current;
+    let ro: ResizeObserver | null = null;
+    if (el && 'ResizeObserver' in window) {
+      ro = new ResizeObserver(updatePosition);
+      ro.observe(el);
+    }
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      if (ro && el) ro.unobserve(el);
+    };
+  }, []);
 
   const handleResetView = () => {
     console.log('Reset view called');
@@ -122,6 +156,12 @@ export const MainPageApp: React.FC = () => {
     const newAutoRotate = !appState.autoRotateEnabled;
     updateAppState({ autoRotateEnabled: newAutoRotate });
     handleThreeAction('toggleAutoRotate');
+  };
+
+  const handleSellDesignSubmit = (formData: SellDesignFormData) => {
+    console.log('Design submitted for sale:', formData);
+    // TODO: Implement API call to backend to save the design listing
+    updateAppState({ status: 'Design submitted successfully!' });
   };
 
   return (
@@ -159,13 +199,20 @@ export const MainPageApp: React.FC = () => {
       )}
 
       {/* Floating Chatbot Panel */}
-      <div className="position-fixed" style={{ top: '76px', right: '16px', width: '400px', zIndex: 1040 }}>
+      <div ref={chatContainerRef} className="position-fixed" style={{ top: '76px', right: '16px', width: '400px', zIndex: 1040 }}>
         <Chatbot 
           onSendMessage={handleSendMessage}
           selectedModel={appState.selectedAiModel}
           onModelChange={(model) => updateAppState({ selectedAiModel: model })}
         />
       </div>
+
+      {/* Controls hint overlay - placed below the chatbot, persistent while a file is uploaded */}
+      <ControlsHint 
+        visible={hasUploadedFile} 
+        onClose={() => { /* persistent - no dismiss */ }}
+        placement={{ top: controlsHintTop, right: 16 }}
+      />
 
       {/* Floating Action Buttons */}
       <div className="fab-container">
@@ -212,6 +259,23 @@ export const MainPageApp: React.FC = () => {
             >
               Screenshot
             </button>
+
+            {hasUploadedFile && (
+              <button
+                className="fab-button"
+                onClick={() => setShowSellModal(true)}
+                style={{ 
+                  minWidth: '140px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <span style={{ color: '#FFD700', fontSize: '1.1rem', fontWeight: 'bold' }}>$</span>
+                <span>Sell Design</span>
+              </button>
+            )}
           </>
         ) : (
           <>
@@ -259,38 +323,75 @@ export const MainPageApp: React.FC = () => {
                  zIndex: 1040, 
                  top: '50%', 
                  transform: 'translateY(-50%)',
-                 padding: '1rem',
+                 padding: '1.25rem',
                  background: 'rgba(0, 0, 0, 0.7)',
                  backdropFilter: 'blur(10px)',
                  border: '1px solid rgba(255, 255, 255, 0.1)'
                }}>
-              <div className="d-flex flex-column align-items-center gap-2">
-                <div className="text-white small mb-1 fw-bold">
-                  High
+              <div className="d-flex align-items-center gap-3">
+                {/* Scale markings */}
+                <div className="d-flex flex-column justify-content-between" style={{ height: '260px' }}>
+                  <div className="text-white-50" style={{ fontSize: '0.75rem', textAlign: 'right' }}>
+                    100 kPa
+                  </div>
+                  <div className="text-white-50" style={{ fontSize: '0.75rem', textAlign: 'right' }}>
+                    75
+                  </div>
+                  <div className="text-white-50" style={{ fontSize: '0.75rem', textAlign: 'right' }}>
+                    50
+                  </div>
+                  <div className="text-white-50" style={{ fontSize: '0.75rem', textAlign: 'right' }}>
+                    25
+                  </div>
+                  <div className="text-white-50" style={{ fontSize: '0.75rem', textAlign: 'right' }}>
+                    0 kPa
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    width: '28px',
-                    height: '220px',
-                    background: 'linear-gradient(to bottom, #F44336, #FFC107, #4CAF50)',
-                    borderRadius: '14px',
-                    boxShadow: '0 6px 20px rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.3)',
-                    border: '2px solid rgba(255,255,255,0.04)'
-                  }}
-                />
+                {/* Gradient bar with labels */}
+                <div className="d-flex flex-column align-items-center gap-2">
+                  <div className="text-white small mb-1 fw-bold">
+                    High
+                  </div>
 
-                <div className="text-white small mt-1 fw-bold">
-                  Low
-                </div>
+                  <div
+                    style={{
+                      width: '32px',
+                      height: '220px',
+                      background: 'linear-gradient(to bottom, #F44336, #FFC107, #4CAF50)',
+                      borderRadius: '14px',
+                      boxShadow: '0 6px 20px rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.3)',
+                      border: '2px solid rgba(255,255,255,0.08)',
+                      position: 'relative'
+                    }}
+                  >
+                    {/* Tick marks */}
+                    <div style={{ position: 'absolute', left: '-8px', top: '0', width: '8px', height: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
+                    <div style={{ position: 'absolute', left: '-8px', top: '25%', width: '8px', height: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
+                    <div style={{ position: 'absolute', left: '-8px', top: '50%', width: '8px', height: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
+                    <div style={{ position: 'absolute', left: '-8px', top: '75%', width: '8px', height: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
+                    <div style={{ position: 'absolute', left: '-8px', bottom: '0', width: '8px', height: '1px', background: 'rgba(255,255,255,0.3)' }}></div>
+                  </div>
 
-                {/* Horizontal caption for easier reading */}
-                <div className="text-white-50 small text-center mt-2" style={{ width: '140px' }}>
-                  Pressure Distribution
+                  <div className="text-white small mt-1 fw-bold">
+                    Low
+                  </div>
                 </div>
+              </div>
+
+              {/* Horizontal caption for easier reading */}
+              <div className="text-white-50 small text-center mt-3" style={{ width: '140px' }}>
+                Pressure Distribution
               </div>
           </div>
         )}
+
+      {/* Sell Design Modal */}
+      <SellDesignModal
+        show={showSellModal}
+        onClose={() => setShowSellModal(false)}
+        onSubmit={handleSellDesignSubmit}
+      />
       </div>
     );
   };export default MainPageApp;

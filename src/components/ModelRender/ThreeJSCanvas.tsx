@@ -1,5 +1,5 @@
 import React, { useRef, forwardRef, useImperativeHandle, useState } from 'react';
-import { OrbitControls, Grid } from '@react-three/drei';
+import { OrbitControls, Grid, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
@@ -12,6 +12,74 @@ interface ThreeJSCanvasProps {
   appState: AppState;
 }
 
+// 3D Pressure Marker Component
+const PressureMarker: React.FC<{ 
+  position: [number, number, number]; 
+  pressure: number; 
+  onRemove: () => void 
+}> = ({ position, pressure, onRemove }) => {
+  return (
+    <group position={position}>
+      {/* Small sphere at the point */}
+      <mesh>
+        <sphereGeometry args={[0.05, 16, 16]} />
+        <meshStandardMaterial color="#9F7AEA" emissive="#6366F1" emissiveIntensity={0.5} />
+      </mesh>
+      
+      {/* HTML label that follows the 3D position */}
+      <Html
+        position={[0, 0.15, 0]}
+        center
+        distanceFactor={2}
+        style={{ pointerEvents: 'auto' }}
+      >
+        <div
+          style={{
+            background: 'linear-gradient(135deg, rgba(159, 122, 234, 0.95), rgba(99, 102, 241, 0.95))',
+            color: 'white',
+            padding: '8px 12px',
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 600,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+            border: '2px solid rgba(255,255,255,0.2)',
+            minWidth: 80,
+            textAlign: 'center',
+            position: 'relative',
+            userSelect: 'none'
+          }}
+        >
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{pressure.toFixed(1)} kPa</div>
+          <div style={{ fontSize: 10, opacity: 0.9, marginTop: 2 }}>Pressure</div>
+          <button
+            onClick={onRemove}
+            style={{
+              position: 'absolute',
+              top: -6,
+              right: -6,
+              width: 18,
+              height: 18,
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.9)',
+              border: '1px solid white',
+              color: 'white',
+              fontSize: 10,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 0
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      </Html>
+    </group>
+  );
+};
+
 // Main Scene Component (enhanced with hover/select + isolation)
 const Scene: React.FC<{
   gridVisible: boolean;
@@ -20,13 +88,17 @@ const Scene: React.FC<{
   onModelLoaded: (info: { controlsRef: React.MutableRefObject<any>; isolatePart: (id: string) => void; clearIsolation: () => void; }) => void;
   onPartHover?: (info: { name: string; metadata: any; screen: { x: number; y: number } } | null) => void;
   onPartSelect?: (info: { name: string; metadata: any } | null) => void;
-}> = ({ gridVisible, autoRotateEnabled, currentFile, onModelLoaded, onPartHover, onPartSelect }) => {
+  onPressureClick?: (info: { pressure: number; worldPosition: [number, number, number] }) => void;
+  pressureMarkers: Array<{ id: string; pressure: number; worldPosition: [number, number, number] }>;
+  onRemoveMarker: (id: string) => void;
+}> = ({ gridVisible, autoRotateEnabled, currentFile, onModelLoaded, onPartHover, onPartSelect, onPressureClick, pressureMarkers, onRemoveMarker }) => {
   const controlsRef = useRef<any>(null);
   const modelRef = useRef<THREE.Group>(new THREE.Group());
   const { invalidate, camera, gl, size } = useThree(); // Use invalidate for explicit update
 
   const prevHoverRef = useRef<THREE.Object3D | null>(null);
   const selectedRootRef = useRef<THREE.Object3D | null>(null);
+  const modelBoundsRef = useRef<{ minY: number; maxY: number } | null>(null);
 
   // Helper to find ancestor mesh
   const findAncestorMesh = (obj: THREE.Object3D | null) => {
@@ -91,10 +163,61 @@ const Scene: React.FC<{
             const stlGeometry = await new Promise<THREE.BufferGeometry>((resolve, reject) => {
               stlLoader.load(objectUrl!, resolve, undefined, reject);
             });
+            
+            // Compute bounding box for pressure distribution calculation
+            stlGeometry.computeBoundingBox();
+            
+            // Store bounds for pressure calculation on click
+            if (stlGeometry.boundingBox) {
+              modelBoundsRef.current = {
+                minY: stlGeometry.boundingBox.min.y,
+                maxY: stlGeometry.boundingBox.max.y
+              };
+            }
+            
+            // Apply pressure distribution vertex colors
+            const positions = stlGeometry.attributes.position;
+            const colors = new Float32Array(positions.count * 3);
+            
+            // Calculate pressure based on Y-position (height) for demonstration
+            // In a real scenario, this would come from CFD simulation data
+            for (let i = 0; i < positions.count; i++) {
+              const y = positions.getY(i);
+              
+              // Normalize Y position to 0-1 range
+              const minY = stlGeometry.boundingBox?.min.y ?? -1;
+              const maxY = stlGeometry.boundingBox?.max.y ?? 1;
+              const normalizedY = (y - minY) / (maxY - minY);
+              
+              // Create gradient from green (low) to yellow (mid) to red (high)
+              const color = new THREE.Color();
+              if (normalizedY < 0.5) {
+                // Green to Yellow
+                color.setRGB(
+                  normalizedY * 2,  // R: 0 to 1
+                  1,                 // G: 1
+                  0                  // B: 0
+                );
+              } else {
+                // Yellow to Red
+                color.setRGB(
+                  1,                        // R: 1
+                  1 - (normalizedY - 0.5) * 2,  // G: 1 to 0
+                  0                         // B: 0
+                );
+              }
+              
+              colors[i * 3] = color.r;
+              colors[i * 3 + 1] = color.g;
+              colors[i * 3 + 2] = color.b;
+            }
+            
+            stlGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            
             loadedModel = new THREE.Mesh(
               stlGeometry,
               new THREE.MeshStandardMaterial({ 
-                color: '#3b82f6',
+                vertexColors: true,
                 roughness: 0.3,
                 metalness: 0.1 
               })
@@ -106,12 +229,52 @@ const Scene: React.FC<{
             loadedModel = await new Promise<THREE.Group>((resolve, reject) => {
               objLoader.load(objectUrl!, resolve, undefined, reject);
             });
-            // Ensure material is applied to all meshes in OBJ group
+            // Apply pressure distribution to all meshes in OBJ group
             loadedModel.traverse((child) => {
-              if (child instanceof THREE.Mesh) {
-                // Ensure the material is a standard one for lighting
+              if (child instanceof THREE.Mesh && child.geometry) {
+                const geometry = child.geometry;
+                
+                // Compute bounding box if not already computed
+                if (!geometry.boundingBox) {
+                  geometry.computeBoundingBox();
+                }
+                
+                // Store bounds for pressure calculation on click (use first mesh bounds)
+                if (!modelBoundsRef.current && geometry.boundingBox) {
+                  modelBoundsRef.current = {
+                    minY: geometry.boundingBox.min.y,
+                    maxY: geometry.boundingBox.max.y
+                  };
+                }
+                
+                const positions = geometry.attributes.position;
+                const colors = new Float32Array(positions.count * 3);
+                
+                // Calculate pressure based on Y-position
+                for (let i = 0; i < positions.count; i++) {
+                  const y = positions.getY(i);
+                  
+                  const minY = geometry.boundingBox?.min.y ?? -1;
+                  const maxY = geometry.boundingBox?.max.y ?? 1;
+                  const normalizedY = (y - minY) / (maxY - minY);
+                  
+                  // Create gradient from green (low) to yellow (mid) to red (high)
+                  const color = new THREE.Color();
+                  if (normalizedY < 0.5) {
+                    color.setRGB(normalizedY * 2, 1, 0);
+                  } else {
+                    color.setRGB(1, 1 - (normalizedY - 0.5) * 2, 0);
+                  }
+                  
+                  colors[i * 3] = color.r;
+                  colors[i * 3 + 1] = color.g;
+                  colors[i * 3 + 2] = color.b;
+                }
+                
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
                 child.material = new THREE.MeshStandardMaterial({ 
-                  color: '#3b82f6',
+                  vertexColors: true,
                   roughness: 0.3,
                   metalness: 0.1 
                 });
@@ -135,37 +298,37 @@ const Scene: React.FC<{
         // --- Model Replacement Logic ---
         modelRef.current.clear(); // 👈 Clears the previous model
         
-        // Center and scale model
-        const box = new THREE.Box3().setFromObject(loadedModel);
+        // Add model to scene first
+        modelRef.current.add(loadedModel);
+        
+        // Calculate bounding box from the entire model group
+        const box = new THREE.Box3().setFromObject(modelRef.current);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
         
-        loadedModel.position.sub(center);
-        
         const maxDim = Math.max(size.x, size.y, size.z);
-        // Scale to fit within a fixed radius (e.g., 3 units) for consistent viewing
-        const scale = 3 / (maxDim || 1); // Use || 1 to avoid division by zero
-        loadedModel.scale.setScalar(scale);
-
-        modelRef.current.add(loadedModel);
         
-        // Reset camera view to frame the new model.
-        // Compute bounding sphere and place camera so the model is centered and fits nicely.
-        const sphere = new THREE.Sphere();
-        box.getBoundingSphere(sphere);
-        const radius = (sphere.radius || maxDim / 2) * scale;
+        // Center the entire model group at the origin
+        modelRef.current.position.set(-center.x, -center.y, -center.z);
+        
+        // Scale to fit within viewport (3 units)
+        const targetSize = 3;
+        const scale = targetSize / (maxDim || 1);
+        modelRef.current.scale.setScalar(scale);
 
+        // Position camera to view the centered and scaled model
         if (controlsRef.current && controlsRef.current.object) {
-          const cam = controlsRef.current.object; // camera
-          const offset = Math.max(3, radius * 2.2);
-          // Position the camera at an offset along x/z and slightly above the model
-          cam.position.set(offset, Math.max(radius * 0.8, 1) + offset * 0.05, offset);
+          const cam = controlsRef.current.object;
+          const distance = targetSize * 2.5;
+          
+          // Set camera position
+          cam.position.set(distance, distance * 0.6, distance);
           cam.lookAt(0, 0, 0);
-          // Ensure OrbitControls target is centered on the model
+          
+          // Reset orbit controls target to origin
           controlsRef.current.target.set(0, 0, 0);
           controlsRef.current.update();
         } else if (controlsRef.current) {
-          // Fallback to default reset when controls exist but no camera reference
           controlsRef.current.reset();
         }
 
@@ -192,6 +355,8 @@ const Scene: React.FC<{
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
 
+    // Disabled hover functionality - removed metadata tooltip
+    /*
     const handleMove = (e: PointerEvent) => {
       if (!modelRef.current) return;
       const rect = dom.getBoundingClientRect();
@@ -245,6 +410,7 @@ const Scene: React.FC<{
       prevHoverRef.current = null;
       onPartHover && onPartHover(null);
     };
+    */
 
     const handleClick = (e: PointerEvent) => {
       if (!modelRef.current) return;
@@ -255,7 +421,34 @@ const Scene: React.FC<{
 
       const intersects = raycaster.intersectObjects(modelRef.current.children, true);
       if (intersects.length) {
-        const obj = intersects[0].object;
+        const intersection = intersects[0];
+        const obj = intersection.object;
+        
+        // Calculate pressure value at clicked point
+        if (modelBoundsRef.current && intersection.point) {
+          const y = intersection.point.y;
+          const { minY, maxY } = modelBoundsRef.current;
+          const normalizedY = (y - minY) / (maxY - minY);
+          
+          // Convert normalized value (0-1) to pressure (0-100 kPa)
+          const pressure = normalizedY * 100;
+          
+          // Use the 3D world position of the intersection point
+          const worldPos: [number, number, number] = [
+            intersection.point.x,
+            intersection.point.y,
+            intersection.point.z
+          ];
+          
+          // Call parent handler to add pressure marker
+          if (onPressureClick) {
+            onPressureClick({
+              pressure: pressure,
+              worldPosition: worldPos
+            });
+          }
+        }
+        
         const mesh = findAncestorMesh(obj);
         if (mesh) {
           // find top-level child containing this mesh
@@ -277,13 +470,12 @@ const Scene: React.FC<{
       onPartSelect && onPartSelect(null);
     };
 
-    dom.addEventListener('pointermove', handleMove);
+    // Only listen for click events, not hover
     dom.addEventListener('pointerdown', handleClick);
     return () => {
-      dom.removeEventListener('pointermove', handleMove);
       dom.removeEventListener('pointerdown', handleClick);
     };
-  }, [gl, camera, onPartHover, onPartSelect]);
+  }, [gl, camera, onPartSelect, onPressureClick]);
 
   return (
     <>
@@ -308,17 +500,31 @@ const Scene: React.FC<{
       {/* Model Group */}
       <group ref={modelRef} />
       
-      {/* Orbit Controls - Full user control */}
+      {/* Pressure Markers in 3D space */}
+      {pressureMarkers.map((marker) => (
+        <PressureMarker
+          key={marker.id}
+          position={marker.worldPosition}
+          pressure={marker.pressure}
+          onRemove={() => onRemoveMarker(marker.id)}
+        />
+      ))}
+      
+      {/* Orbit Controls - Improved for better UX */}
       <OrbitControls
-        ref={controlsRef} // 👈 controlsRef is used here
+        ref={controlsRef}
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
         enableDamping={true}
-        dampingFactor={0.05}
-        minDistance={0.5}
-        maxDistance={100}
+        dampingFactor={0.08}
+        minDistance={1}
+        maxDistance={50}
         maxPolarAngle={Math.PI}
+        zoomSpeed={1.2}
+        rotateSpeed={0.8}
+        panSpeed={0.8}
+        screenSpacePanning={false}
         mouseButtons={{
           LEFT: THREE.MOUSE.ROTATE,
           MIDDLE: THREE.MOUSE.DOLLY,
@@ -337,6 +543,27 @@ const ThreeJSCanvas = forwardRef<ThreeJSActions, ThreeJSCanvasProps>(({ onStateU
   const clearIsoRef = useRef<(() => void) | null>(null);
   const [hoverInfo, setHoverInfo] = useState<{ name: string; metadata: any; screen: { x: number; y: number } } | null>(null);
   const [selectedInfo, setSelectedInfo] = useState<{ name: string; metadata: any } | null>(null);
+  const [pressureMarkers, setPressureMarkers] = useState<Array<{ id: string; pressure: number; worldPosition: [number, number, number] }>>([]);
+
+  // Handle pressure click to add marker
+  const handlePressureClick = (info: { pressure: number; worldPosition: [number, number, number] }) => {
+    const newMarker = {
+      id: `marker-${Date.now()}`,
+      pressure: info.pressure,
+      worldPosition: info.worldPosition
+    };
+    setPressureMarkers(prev => [...prev, newMarker]);
+  };
+
+  // Function to remove a specific marker
+  const removeMarker = (id: string) => {
+    setPressureMarkers(prev => prev.filter(m => m.id !== id));
+  };
+
+  // Function to clear all markers
+  const clearAllMarkers = () => {
+    setPressureMarkers([]);
+  };
 
   // Function to save the OrbitControls ref and helper functions from the Scene component
   const handleModelLoaded = (info: any) => {
@@ -448,30 +675,13 @@ const ThreeJSCanvas = forwardRef<ThreeJSActions, ThreeJSCanvasProps>(({ onStateU
           onModelLoaded={handleModelLoaded}
           onPartHover={(info) => setHoverInfo(info)}
           onPartSelect={(info) => setSelectedInfo(info)}
+          onPressureClick={handlePressureClick}
+          pressureMarkers={pressureMarkers}
+          onRemoveMarker={removeMarker}
         />
       </Canvas>
 
-      {/* Hover tooltip (HTML overlay) */}
-      {hoverInfo && (
-        <div
-          className="three-tooltip"
-          style={{
-            position: 'absolute',
-            left: Math.max(8, hoverInfo.screen.x) + 'px',
-            top: Math.max(8, hoverInfo.screen.y) + 'px',
-            transform: 'translate(-50%, -120%)',
-            pointerEvents: 'none',
-            zIndex: 2000
-          }}
-        >
-          <div style={{ background: 'rgba(0,0,0,0.7)', color: 'white', padding: '6px 10px', borderRadius: 6, fontSize: 12, maxWidth: 220 }}>
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>{hoverInfo.name}</div>
-            {hoverInfo.metadata && Object.keys(hoverInfo.metadata).length > 0 && (
-              <div style={{ fontSize: 11, opacity: 0.9 }}>{JSON.stringify(hoverInfo.metadata)}</div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Hover tooltip disabled - metadata removed */}
 
       {/* Selected part panel */}
       {selectedInfo && (
@@ -485,6 +695,27 @@ const ThreeJSCanvas = forwardRef<ThreeJSActions, ThreeJSCanvasProps>(({ onStateU
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Clear all markers button - only show when markers exist */}
+      {pressureMarkers.length > 0 && (
+        <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 2000 }}>
+          <button
+            className="btn btn-sm"
+            onClick={clearAllMarkers}
+            style={{
+              background: 'rgba(239, 68, 68, 0.9)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              fontWeight: 600,
+              fontSize: 12,
+              padding: '6px 12px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+            }}
+          >
+            Clear All Markers ({pressureMarkers.length})
+          </button>
         </div>
       )}
     </div>
