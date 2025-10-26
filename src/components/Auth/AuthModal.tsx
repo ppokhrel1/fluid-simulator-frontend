@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Form, Alert } from 'react-bootstrap';
+import { localDB } from '../../services/localStorageDB';
 
 interface AuthModalProps {
   show: boolean;
@@ -79,16 +80,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, ini
     setIsLoading(true);
 
     try {
-      // Simulate API call - replace with actual authentication logic
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Use localDB for authentication
+      const user = await localDB.loginUser(loginData.email, loginData.password);
       
-      // Mock successful login
       const userData: UserData = {
-        id: 'user_' + Date.now(),
-        email: loginData.email,
-        firstName: 'John',
-        lastName: 'Doe',
-        username: loginData.email.split('@')[0]
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username
       };
 
       onAuthSuccess(userData);
@@ -96,8 +96,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, ini
       
       // Reset form
       setLoginData({ email: '', password: '' });
-    } catch (err) {
-      setError('Invalid email or password. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -119,19 +119,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, ini
       return;
     }
 
+    if (!signupData.agreeToTerms) {
+      setError('Please agree to the terms and conditions.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Simulate API call - replace with actual registration logic
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock successful signup
-      const userData: UserData = {
-        id: 'user_' + Date.now(),
-        email: signupData.email,
+      // Use localDB for registration
+      const user = await localDB.registerUser({
         firstName: signupData.firstName,
         lastName: signupData.lastName,
-        username: signupData.username
+        username: signupData.username,
+        email: signupData.email,
+        password: signupData.password
+      });
+      
+      const userData: UserData = {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username
       };
 
       onAuthSuccess(userData);
@@ -147,8 +157,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, ini
         confirmPassword: '',
         agreeToTerms: false
       });
-    } catch (err) {
-      setError('Failed to create account. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }

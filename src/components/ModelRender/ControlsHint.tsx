@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface ControlsHintProps {
   visible: boolean;
@@ -12,26 +12,89 @@ interface ControlsHintProps {
 }
 
 const ControlsHint: React.FC<ControlsHintProps> = ({ visible, onClose, placement }) => {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
   if (!visible) return null;
 
-  // Build placement only from provided sides; if none provided, default to bottom-left
-  const stylePlacement: React.CSSProperties = {};
-  if (placement) {
-    if (placement.top !== undefined) stylePlacement.top = placement.top;
-    if (placement.right !== undefined) stylePlacement.right = placement.right;
-    if (placement.bottom !== undefined) stylePlacement.bottom = placement.bottom;
-    if (placement.left !== undefined) stylePlacement.left = placement.left;
-  } else {
-    stylePlacement.left = 16;
-    stylePlacement.bottom = 96;
-  }
+  // Initialize position based on placement prop or default
+  useEffect(() => {
+    if (placement) {
+      const initialX = placement.right !== undefined 
+        ? window.innerWidth - (placement.right as number) - 280 // 280 is the width of the hint
+        : placement.left !== undefined 
+        ? (placement.left as number) 
+        : 16;
+      
+      const initialY = placement.top !== undefined 
+        ? (placement.top as number)
+        : placement.bottom !== undefined
+        ? window.innerHeight - (placement.bottom as number) - 150 // approximate height
+        : window.innerHeight - 246; // default bottom position
+      
+      setPosition({ x: initialX, y: initialY });
+    } else {
+      // Default position
+      setPosition({ x: 16, y: window.innerHeight - 246 });
+    }
+  }, [placement, visible]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    // Keep within viewport bounds
+    const maxX = window.innerWidth - 280; // width of hint
+    const maxY = window.innerHeight - 150; // approximate height of hint
+    
+    setPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
+  const stylePlacement: React.CSSProperties = {
+    left: position.x,
+    top: position.y,
+    cursor: isDragging ? 'grabbing' : 'grab'
+  };
 
   return (
     <div
+      ref={containerRef}
       className="position-fixed"
       style={{
         ...stylePlacement,
-        zIndex: 2000,
+        zIndex: 1060, // Higher than chatbot to be draggable
+        userSelect: 'none' // Prevent text selection while dragging
       }}
     >
       <div
@@ -43,8 +106,11 @@ const ControlsHint: React.FC<ControlsHintProps> = ({ visible, onClose, placement
           backdropFilter: 'blur(10px)',
           borderRadius: 14,
           color: 'white',
-          padding: '14px 14px 10px 14px'
+          padding: '14px 14px 10px 14px',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          transition: isDragging ? 'none' : 'all 0.2s ease'
         }}
+        onMouseDown={handleMouseDown}
       >
         <div className="d-flex align-items-center mb-2">
           <div
@@ -61,8 +127,25 @@ const ControlsHint: React.FC<ControlsHintProps> = ({ visible, onClose, placement
           >
             <span style={{ fontWeight: 800 }}>i</span>
           </div>
-          <div>
-            <div style={{ fontWeight: 700 }}>Navigation</div>
+          <div className="flex-grow-1">
+            <div className="d-flex align-items-center gap-2">
+              <span style={{ fontWeight: 700 }}>Navigation</span>
+              <div className="d-flex align-items-center gap-1">
+                <div 
+                  style={{ 
+                    fontSize: 10, 
+                    opacity: 0.6, 
+                    background: 'rgba(255,255,255,0.1)',
+                    padding: '2px 6px',
+                    borderRadius: 4,
+                    border: '1px dashed rgba(255,255,255,0.2)'
+                  }}
+                >
+                  DRAG TO MOVE
+                </div>
+                <div style={{ opacity: 0.4, fontSize: 12 }}>⋮⋮</div>
+              </div>
+            </div>
             <div className="text-white-50" style={{ fontSize: 12 }}>Use your mouse to move around the model</div>
           </div>
           {/* Persistent hint: no dismiss button rendered */}

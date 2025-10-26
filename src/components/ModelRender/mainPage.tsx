@@ -13,6 +13,7 @@ import BottomControlDock from '../ModelRender/BottomControlDock';
 import PressureLegend from '../ModelRender/PressureLegend';
 import type { AppState, ThreeJSActions, FileData, ChatMessage } from '../../types';
 import { sendMessageToAI } from '../ai_system/aiAdapter';
+import { localDB } from '../../services/localStorageDB';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -104,7 +105,9 @@ export const MainPageApp: React.FC = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showCartModal, setShowCartModal] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [user, setUser] = useState<UserData | null>(initialStateData.user);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [salesRefreshTrigger, setSalesRefreshTrigger] = useState(0);
+  const [storeRefreshTrigger, setStoreRefreshTrigger] = useState(0);
   const [loginSource, setLoginSource] = useState<'header' | 'sellDesign'>('header');
   const [hasUploadedFile, setHasUploadedFile] = useState(initialStateData.hasFile);
   const [controlsHintTop, setControlsHintTop] = useState<number>(0);
@@ -112,6 +115,28 @@ export const MainPageApp: React.FC = () => {
   const threeRef = useRef<ThreeJSActions>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Initialize user from localDB on component mount
+  useEffect(() => {
+    const initializeUser = async () => {
+      try {
+        const currentUser = await localDB.getCurrentUser();
+        if (currentUser) {
+          setUser({
+            id: currentUser.id,
+            email: currentUser.email,
+            firstName: currentUser.firstName,
+            lastName: currentUser.lastName,
+            username: currentUser.username
+          });
+        }
+      } catch (error) {
+        console.log('No user currently logged in');
+      }
+    };
+    
+    initializeUser();
+  }, []);
 
   const updateAppState = (updates: Partial<AppState>) => {
     setAppState(prev => ({ ...prev, ...updates }));
@@ -261,28 +286,100 @@ export const MainPageApp: React.FC = () => {
     }
   };
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('File input changed', e.target.files);
     if (e.target.files?.[0]) {
       const file = e.target.files[0];
       handleThreeAction('loadFile', file);
       setHasUploadedFile(true); // Track that a file has been uploaded
       
-      // Update app state with file information
-      updateAppState({ 
-        status: `Loading ${file.name}...`,
-        uploadedFiles: [{ 
-          name: file.name, 
-          size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-          color: '#4CAF50',
-          icon: 'fas fa-cube'
-        }]
-      });
+      // Store the actual file data as a blob URL for later use
+      const fileURL = URL.createObjectURL(file);
+      console.log('Created blob URL for file:', file.name, 'URL:', fileURL);
       
-      // Update status after load
+      // Convert to base64 for persistent storage
+      const convertToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      try {
+        const base64Data = await convertToBase64(file);
+        console.log('File converted to base64, length:', base64Data?.length);
+        
+        // Update app state with file information and both storage methods
+        updateAppState({ 
+          status: `Loading ${file.name}...`,
+          uploadedFiles: [{ 
+            name: file.name, 
+            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+            color: '#4CAF50',
+            icon: 'fas fa-cube',
+            fileData: file, // Store the actual File object
+            fileURL: fileURL, // Store the blob URL for loading
+            fileBase64: base64Data, // Store base64 for persistence
+            fileType: file.type || file.name.split('.').pop() || 'unknown',
+            isFromStore: false, // Mark as user's own upload
+            originalSeller: null, // No original seller for user uploads
+            storeItemId: null // No store item ID for user uploads
+          } as FileData]
+        });
+        
+        console.log('File data stored with both blob URL and base64');
+      } catch (error) {
+        console.error('Error converting file to base64:', error);
+        // Fall back to just blob URL storage
+        updateAppState({ 
+          status: `Loading ${file.name}...`,
+          uploadedFiles: [{ 
+            name: file.name, 
+            size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+            color: '#4CAF50',
+            icon: 'fas fa-cube',
+            fileData: file, // Store the actual File object
+            fileURL: fileURL, // Store the blob URL for loading
+            fileType: file.type || file.name.split('.').pop() || 'unknown',
+            isFromStore: false, // Mark as user's own upload
+            originalSeller: null, // No original seller for user uploads
+            storeItemId: null // No store item ID for user uploads
+          } as FileData]
+        });
+      }
+      
+          // Update status after load
       setTimeout(() => {
         updateAppState({ status: `${file.name} loaded - Analysis ready` });
       }, 1000);
+      
+      // Make debug function globally available
+      (window as any).debugFileStorage = () => {
+        console.log('=== File Storage Debug ===');
+        console.log('appState.uploadedFiles:', appState.uploadedFiles);
+        console.log('hasUploadedFile:', hasUploadedFile);
+        
+        if (appState.uploadedFiles.length > 0) {
+          const file = appState.uploadedFiles[0];
+          console.log('Current file details:', {
+            name: file.name,
+            size: (file as any).size,
+            hasFileURL: !!(file as any).fileURL,
+            hasFileBase64: !!(file as any).fileBase64,
+            fileBase64Length: (file as any).fileBase64?.length,
+            fileType: (file as any).fileType
+          });
+        }
+        
+        try {
+          const designs = JSON.parse(localStorage.getItem('designs') || '[]');
+          console.log('localStorage designs:', designs);
+        } catch (e) {
+          console.log('Error reading localStorage:', e);
+        }
+      };
       
       // Reset the input to allow uploading the same file again
       e.target.value = '';
@@ -346,7 +443,17 @@ export const MainPageApp: React.FC = () => {
     if (user) {
       // User is authenticated, check if they have uploaded a file
       if (hasUploadedFile && appState.uploadedFiles.length > 0) {
-        // User has uploaded file(s), show sell design modal
+        const currentFile = appState.uploadedFiles[appState.uploadedFiles.length - 1];
+        
+        // Check if the current file is from the store (can't resell)
+        if ((currentFile as any).isFromStore) {
+          updateAppState({ 
+            status: `Cannot sell "${currentFile.name}" - this design belongs to ${(currentFile as any).originalSeller}. Please upload your own original design to sell.` 
+          });
+          return;
+        }
+        
+        // User has uploaded their own file(s), show sell design modal
         setShowSellModal(true);
       } else {
         // User is logged in but hasn't uploaded any design yet
@@ -386,15 +493,83 @@ export const MainPageApp: React.FC = () => {
     // Don't show sell modal - just complete the login
   };
 
-  const handleSellDesignSubmit = (formData: SellDesignFormData) => {
+  const handleSellDesignSubmit = async (formData: SellDesignFormData) => {
     console.log('Design submitted for sale:', formData, 'by user:', user);
-    // TODO: Implement API call to backend to save the design listing with user information
-    updateAppState({ 
-      status: `${formData.designName} listed successfully! It will be reviewed and published soon.` 
-    });
+    
+    if (!user) {
+      console.error('No user logged in');
+      updateAppState({ status: 'Please log in to sell designs.' });
+      return;
+    }
+
+    try {
+      const currentFile = appState.uploadedFiles[appState.uploadedFiles.length - 1];
+      console.log('Current file being processed for sale:', currentFile);
+      console.log('Current file fileURL:', (currentFile as any)?.fileURL);
+      console.log('Current file fileBase64 exists:', !!(currentFile as any)?.fileBase64);
+      console.log('Current file fileBase64 length:', (currentFile as any)?.fileBase64?.length);
+      
+      // Create design using localDB
+      const designData = {
+        name: formData.designName,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        originalPrice: parseFloat(formData.price) * 1.2,
+        category: formData.category,
+        seller: user.firstName + ' ' + user.lastName || user.username,
+        sellerId: user.id,
+        authorId: user.id,
+        rating: 0,
+        downloads: 0,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+        technicalSpecs: formData.technicalSpecs,
+        instructions: formData.instructions,
+        licenseType: formData.licenseType,
+        fileOrigin: formData.fileOrigin,
+        originDeclaration: formData.originDeclaration,
+        qualityAssurance: formData.qualityAssurance,
+        status: 'active' as const,
+        fileName: currentFile?.name || 'Unknown file',
+        fileSize: (currentFile as any)?.size || 'Unknown size',
+        color: '#4CAF50',
+        icon: 'fas fa-cube',
+        preview: '/placeholder-design.jpg',
+        views: 0,
+        likes: 0,
+        // Store the actual file data for viewing later
+        fileURL: (currentFile as FileData)?.fileURL,
+        fileBase64: (currentFile as FileData)?.fileBase64,
+        fileType: (currentFile as FileData)?.fileType || currentFile?.name?.split('.').pop() || 'unknown'
+      };
+      
+      console.log('Creating design with data:', designData);
+      console.log('Design fileURL being saved:', designData.fileURL);
+      console.log('Design fileBase64 being saved (exists):', !!designData.fileBase64);
+      
+      const newDesign = await localDB.createDesign(designData);
+      
+      updateAppState({ 
+        status: `${formData.designName} listed successfully! It's now available in the marketplace.` 
+      });
+      
+      // Trigger sales modal refresh
+      setSalesRefreshTrigger(prev => prev + 1);
+      
+      // Increment the store refresh trigger  
+      setStoreRefreshTrigger((prev: number) => prev + 1);
+      
+      // Close the sell modal
+      setShowSellModal(false);
+    } catch (error) {
+      console.error('Error listing design:', error);
+      updateAppState({ 
+        status: 'Error listing design. Please try again.' 
+      });
+    }
   };
 
   const handleLogout = () => {
+    localDB.logoutUser();
     setUser(null);
     updateAppState({ status: 'Logged out successfully.' });
   };
@@ -459,25 +634,112 @@ export const MainPageApp: React.FC = () => {
   };
 
   // Handle viewing an item from the store
-  const handleViewItem = (item: StoreItem) => {
+  const handleViewItem = async (item: StoreItem) => {
     console.log('Viewing item:', item);
+    console.log('Item has fileURL:', !!item.fileURL);
+    console.log('FileURL value:', item.fileURL);
     
     // Switch back to main view to show the 3D model
     updateAppState({ 
       view: 'main',
-      status: `Previewing ${item.name} - ${item.description || 'Premium 3D design'}`
+      status: `Loading ${item.name} for preview...`
     });
     
-    // Simulate loading the 3D model for preview
-    // In a real implementation, you would load the actual 3D file here
-    setTimeout(() => {
+    // Check if this item has file data (user-uploaded design)
+    if (item.fileURL || (item as any).fileBase64) {
+      try {
+        let file: File | null = null;
+        let fileSource = '';
+        
+        // Try to load from blob URL first
+        if (item.fileURL) {
+          console.log('Attempting to load from blob URL:', item.fileURL);
+          try {
+            const response = await fetch(item.fileURL);
+            if (response.ok) {
+              const blob = await response.blob();
+              file = new File([blob], item.name, { type: blob.type || 'application/octet-stream' });
+              fileSource = 'blob URL';
+              console.log('Successfully loaded from blob URL');
+            } else {
+              throw new Error(`Blob URL response not ok: ${response.status}`);
+            }
+          } catch (blobError) {
+            console.log('Blob URL failed:', blobError);
+          }
+        }
+        
+        // If blob URL failed, try base64 data
+        if (!file && (item as any).fileBase64) {
+          console.log('Attempting to load from base64 data');
+          try {
+            const base64Data = (item as any).fileBase64;
+            if (base64Data && base64Data.startsWith('data:')) {
+              const response = await fetch(base64Data);
+              const blob = await response.blob();
+              file = new File([blob], item.name, { type: blob.type || 'application/octet-stream' });
+              fileSource = 'base64 data';
+              console.log('Successfully loaded from base64');
+            } else {
+              throw new Error('Invalid base64 data format');
+            }
+          } catch (base64Error) {
+            console.log('Base64 loading failed:', base64Error);
+          }
+        }
+        
+        if (file) {
+          console.log(`Loading file ${item.name} from ${fileSource} into 3D viewer`);
+          
+          // Load the file into the 3D viewer
+          handleThreeAction('loadFile', file);
+          setHasUploadedFile(true);
+          
+          // Update app state with the loaded file information
+          updateAppState({ 
+            status: `${item.name} loaded for preview! Design by ${item.seller} (loaded from ${fileSource})`,
+            uploadedFiles: [{ 
+              name: item.name,
+              size: item.size || 'Unknown size',
+              color: item.color,
+              icon: item.icon,
+              fileURL: item.fileURL,
+              fileType: item.fileType,
+              isFromStore: true, // Mark this file as loaded from store
+              originalSeller: item.seller, // Track original seller
+              storeItemId: item.id // Track original store item ID
+            } as FileData]
+          });
+          
+          // Track view in analytics
+          try {
+            await localDB.incrementDesignViews(item.id);
+          } catch (analyticsError) {
+            console.warn('Could not track view:', analyticsError);
+          }
+        } else {
+          throw new Error('Failed to load file from both blob URL and base64 data');
+        }
+        
+      } catch (fileError) {
+        console.error('Error loading file:', fileError);
+        updateAppState({ 
+          status: `Preview not available for ${item.name}. File data may be corrupted or unavailable.`
+        });
+      }
+    } else {
+      // This is a default/demo item without actual file data
       updateAppState({ 
-        status: `${item.name} loaded successfully! This is a preview - purchase to download the full model.`
+        status: `${item.name} is a demo item. Preview not available - actual 3D file not stored.`
       });
-    }, 1000);
-    
-    // You could also trigger the ThreeJS canvas to load a preview version
-    // or show a modal with more details about the item
+      
+      // Show a placeholder message for demo items
+      setTimeout(() => {
+        updateAppState({ 
+          status: `${item.name} - This is a demo marketplace item. Upload your own designs to enable full 3D preview!`
+        });
+      }, 2000);
+    }
   };
 
   return (
@@ -591,6 +853,7 @@ export const MainPageApp: React.FC = () => {
           onAddToCart={handleAddToCart}
           onShowCart={() => setShowCartModal(true)}
           onViewItem={handleViewItem}
+          refreshTrigger={storeRefreshTrigger}
         />
       )}
 
@@ -863,6 +1126,7 @@ export const MainPageApp: React.FC = () => {
         onClose={() => setShowSalesModal(false)}
         user={user}
         onUploadDesign={handleSalesModalUpload}
+        refreshTrigger={salesRefreshTrigger}
       />
 
       {/* Authentication Modal */}

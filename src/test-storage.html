@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a2e; color: white; }
+        button { padding: 10px 20px; margin: 10px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #764ba2; }
+        pre { background: #333; padding: 15px; border-radius: 5px; overflow: auto; max-height: 500px; }
+    </style>
+</head>
+<body>
+    <h1>LocalStorage Test - Fluid Simulator</h1>
+    <button onclick="checkStorage()">Check Storage</button>
+    <button onclick="clearStorage()">Clear All</button>
+    <button onclick="goBack()">Back to App</button>
+    <pre id="output"></pre>
+
+    <script>
+        function checkStorage() {
+            const output = document.getElementById('output');
+            let result = 'LocalStorage Contents:\n\n';
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                
+                if (key === 'designs') {
+                    try {
+                        const designs = JSON.parse(value);
+                        result += `${key}: ${designs.length} designs found\n`;
+                        designs.forEach((design, index) => {
+                            result += `  Design ${index + 1}:\n`;
+                            result += `    ID: ${design.id}\n`;
+                            result += `    Name: ${design.name}\n`;
+                            result += `    Seller: ${design.seller}\n`;
+                            result += `    Price: $${design.price}\n`;
+                            result += `    Has fileURL: ${!!design.fileURL}\n`;
+                            result += `    Has fileBase64: ${!!design.fileBase64}\n`;
+                            result += `    fileBase64 length: ${design.fileBase64 ? design.fileBase64.length : 'N/A'}\n`;
+                            result += `    FileType: ${design.fileType}\n`;
+                            result += `    Status: ${design.status}\n\n`;
+                        });
+                    } catch (e) {
+                        result += `${key}: (Parse error: ${e.message})\n`;
+                    }
+                } else if (key === 'users') {
+                    try {
+                        const users = JSON.parse(value);
+                        result += `${key}: ${users.length} users\n`;
+                    } catch (e) {
+                        result += `${key}: (Parse error)\n`;
+                    }
+                } else {
+                    result += `${key}: ${value ? value.substring(0, 100) + (value.length > 100 ? '...' : '') : 'empty'}\n`;
+                }
+            }
+            
+            if (localStorage.length === 0) {
+                result = 'No data in localStorage';
+            }
+            
+            output.textContent = result;
+        }
+        
+        function clearStorage() {
+            if (confirm('Are you sure you want to clear all storage? This will delete all designs and user data.')) {
+                localStorage.clear();
+                document.getElementById('output').textContent = 'Storage cleared!';
+            }
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+        
+        // Auto-check on page load
+        window.onload = checkStorage;
+    </script>
+</body>
+</html>

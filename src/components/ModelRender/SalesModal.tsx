@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Nav, Tab, Form, Table, Badge, Card } from 'react-bootstrap';
+import { localDB } from '../../services/localStorageDB';
 
 interface SalesModalProps {
   show: boolean;
   onClose: () => void;
   user: any;
   onUploadDesign?: () => void;
+  refreshTrigger?: number; // Add trigger to refresh data when new designs are added
 }
 
 interface DesignAsset {
@@ -60,11 +62,53 @@ interface PayoutStats {
   minimumPayout: number;
 }
 
-const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user, onUploadDesign }) => {
+const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user, onUploadDesign, refreshTrigger }) => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [assets, setAssets] = useState<DesignAsset[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Mock data for demonstration - in real app, this would come from API
-  const [assets] = useState<DesignAsset[]>([
+  // Load user's designs from localStorage
+  const loadUserDesigns = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const designs = await localDB.getDesigns({ sellerId: user.id });
+      console.log('Loading designs for user:', user.id, 'Found:', designs.length);
+      
+      const designAssets: DesignAsset[] = designs.map(design => ({
+        id: design.id,
+        name: design.name,
+        description: design.description || 'No description provided',
+        price: design.price,
+        category: design.category || 'General',
+        status: design.status as 'active' | 'draft' | 'sold' | 'paused',
+        sales: design.downloads || 0,
+        revenue: (design.downloads || 0) * design.price,
+        uploadDate: design.uploadDate ? new Date(design.uploadDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        lastModified: design.uploadDate ? new Date(design.uploadDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        views: design.views || 0,
+        likes: design.likes || 0
+      }));
+      
+      setAssets(designAssets);
+    } catch (error) {
+      console.error('Error loading user designs:', error);
+      setAssets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load designs when modal opens, user changes, or refreshTrigger changes
+  useEffect(() => {
+    if (show && user) {
+      loadUserDesigns();
+    }
+  }, [show, user, refreshTrigger]);
+
+  // Mock additional data for fallback - will be replaced with real data above
+  const [mockAssets] = useState<DesignAsset[]>([
     {
       id: '1',
       name: 'Aerodynamic Wing Design',

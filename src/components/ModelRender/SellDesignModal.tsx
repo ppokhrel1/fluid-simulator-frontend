@@ -41,21 +41,36 @@ const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubm
     instructions: ''
   });
 
-  // Update form data when uploadedFile changes
+  const [hasEditedName, setHasEditedName] = useState(false);
+
+  // Initialize form data when modal opens and uploadedFile is available
   useEffect(() => {
-    if (uploadedFile && uploadedFile.name) {
-      // Remove file extension and clean up the name for design title
-      const nameWithoutExtension = uploadedFile.name.replace(/\.[^/.]+$/, '');
-      const cleanName = nameWithoutExtension
-        .replace(/[_-]/g, ' ')
-        .replace(/\b\w/g, (l: string) => l.toUpperCase());
+    if (show && uploadedFile && uploadedFile.name) {
+      // Only auto-populate if the current name is empty or hasn't been manually edited
+      const currentName = formData.designName;
+      const shouldAutoPopulate = !currentName || (!hasEditedName && currentName !== formData.designName);
       
-      setFormData(prev => ({
-        ...prev,
-        designName: cleanName
-      }));
+      if (shouldAutoPopulate) {
+        // Remove file extension and clean up the name for design title
+        const nameWithoutExtension = uploadedFile.name.replace(/\.[^/.]+$/, '');
+        const cleanName = nameWithoutExtension
+          .replace(/[_-]/g, ' ')
+          .replace(/\b\w/g, (l: string) => l.toUpperCase());
+        
+        setFormData(prev => ({
+          ...prev,
+          designName: cleanName
+        }));
+        console.log('Auto-populated design name:', cleanName);
+      }
     }
-  }, [uploadedFile]);
+    
+    // Only reset the edit flag when modal opens for the first time with a new file
+    if (show && uploadedFile && !formData.designName) {
+      setHasEditedName(false);
+      console.log('Reset hasEditedName flag for new file');
+    }
+  }, [show, uploadedFile]);
 
   // Common input styles
   const inputStyle = {
@@ -77,6 +92,11 @@ const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubm
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
+    // Track if user manually edits the design name
+    if (name === 'designName') {
+      setHasEditedName(true);
+    }
+    
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -89,7 +109,7 @@ const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubm
     e.preventDefault();
     onSubmit(formData);
     onClose();
-    // Reset form
+    // Reset form and edit flag
     setFormData({
       designName: '',
       description: '',
@@ -103,6 +123,7 @@ const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubm
       tags: '',
       instructions: ''
     });
+    setHasEditedName(false);
   };
 
   return (

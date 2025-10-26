@@ -4,6 +4,13 @@ export interface FileData {
   icon: string;
   size?: string;
   file?: File;
+  fileData?: File; // Store the actual File object
+  fileURL?: string; // Store the blob URL for loading  
+  fileType?: string; // File type/extension
+  fileBase64?: string; // Base64 encoded file data for persistence
+  isFromStore?: boolean; // Track if file was loaded from store
+  originalSeller?: string | null; // Track original seller if from store
+  storeItemId?: string | null; // Track original store item ID
 }
 
 export interface ChatMessage {

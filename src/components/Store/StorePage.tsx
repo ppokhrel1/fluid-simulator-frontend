@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { FileData } from '../../types';
 import { type CartItem } from './CartModal';
+import { localDB } from '../../services/localStorageDB';
 
 interface StorePageProps {
   onBack: () => void;
@@ -8,6 +9,7 @@ interface StorePageProps {
   onAddToCart: (item: StoreItem) => void;
   onShowCart: () => void;
   onViewItem?: (item: StoreItem) => void;
+  refreshTrigger?: number; // Add this to trigger re-loading of store items
 }
 
 export interface StoreItem extends FileData {
@@ -22,80 +24,124 @@ export interface StoreItem extends FileData {
   downloads?: number;
 }
 
-const StorePage: React.FC<StorePageProps> = ({ onBack, cartItems, onAddToCart, onShowCart, onViewItem }) => {
+const StorePage: React.FC<StorePageProps> = ({ onBack, cartItems, onAddToCart, onShowCart, onViewItem, refreshTrigger }) => {
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
 
-  const storeItems: StoreItem[] = [
-    {
-      id: 'item-1',
-      name: 'ARCTIC Liquid Freezer III Pro A-RGB',
-      color: '#4CAF50',
-      icon: 'fas fa-cube',
-      size: '2.5 MB',
-      price: 29.99,
-      originalPrice: 39.99,
-      description: 'High-performance liquid cooling system with RGB lighting',
-      category: 'Cooling Systems',
-      seller: 'TechDesigns Pro',
-      rating: 4.8,
-      downloads: 247
-    },
-    {
-      id: 'item-2',
-      name: 'Corsair NAUTILUS Water 360mm',
-      color: '#2196F3',
-      icon: 'fas fa-cube',
-      size: '3.1 MB',
-      price: 34.99,
-      originalPrice: 44.99,
-      description: 'Premium all-in-one liquid cooler with advanced pump design',
-      category: 'Cooling Systems',
-      seller: 'CoolTech Studio',
-      rating: 4.9,
-      downloads: 189
-    },
-    {
-      id: 'item-3',
-      name: 'Thermalright Peerless Assassin',
-      color: '#9C27B0',
-      icon: 'fas fa-cube',
-      size: '1.8 MB',
-      price: 24.99,
-      originalPrice: 29.99,
-      description: 'Dual-tower air cooler with exceptional heat dissipation',
-      category: 'Air Coolers',
-      seller: 'AeroDesign Labs',
-      rating: 4.7,
-      downloads: 312
-    },
-    {
-      id: 'item-4',
-      name: 'AMD Wraith Stealth Socket',
-      color: '#FF5722',
-      icon: 'fas fa-cube',
-      size: '2.2 MB',
-      price: 19.99,
-      originalPrice: 24.99,
-      description: 'Compact and efficient stock cooler design',
-      category: 'CPU Coolers',
-      seller: 'ProcessorParts Inc',
-      rating: 4.5,
-      downloads: 456
-    },
-    {
-      id: 'item-5',
-      name: 'NZXT Kraken Elite 360mm',
-      color: '#607D8B',
-      icon: 'fas fa-cube',
-      size: '2.7 MB',
-      price: 39.99,
-      originalPrice: 49.99,
-      description: 'Elite-class AIO cooler with customizable LCD display',
-      category: 'Premium Cooling',
-      seller: 'EliteDesigns Co',
-      rating: 4.9,
-      downloads: 198
-    }
-  ];
+  // Load designs from localStorage on component mount
+  useEffect(() => {
+    const loadStoreItems = async () => {
+      // Default store items (as fallback/demo data)
+      const defaultItems: StoreItem[] = [
+        {
+          id: 'item-1',
+          name: 'ARCTIC Liquid Freezer III Pro A-RGB',
+          color: '#4CAF50',
+          icon: 'fas fa-cube',
+          size: '2.5 MB',
+          price: 29.99,
+          originalPrice: 39.99,
+          description: 'High-performance liquid cooling system with RGB lighting',
+          category: 'Cooling Systems',
+          seller: 'TechDesigns Pro',
+          rating: 4.8,
+          downloads: 247
+        },
+        {
+          id: 'item-2',
+          name: 'Corsair NAUTILUS Water 360mm',
+          color: '#2196F3',
+          icon: 'fas fa-cube',
+          size: '3.1 MB',
+          price: 34.99,
+          originalPrice: 44.99,
+          description: 'Premium all-in-one liquid cooler with advanced pump design',
+          category: 'Cooling Systems',
+          seller: 'CoolTech Studio',
+          rating: 4.9,
+          downloads: 189
+        },
+        {
+          id: 'item-3',
+          name: 'Thermalright Peerless Assassin',
+          color: '#9C27B0',
+          icon: 'fas fa-cube',
+          size: '1.8 MB',
+          price: 24.99,
+          originalPrice: 29.99,
+          description: 'Dual-tower air cooler with exceptional heat dissipation',
+          category: 'Air Coolers',
+          seller: 'AeroDesign Labs',
+          rating: 4.7,
+          downloads: 312
+        },
+        {
+          id: 'item-4',
+          name: 'AMD Wraith Stealth Socket',
+          color: '#FF5722',
+          icon: 'fas fa-cube',
+          size: '2.2 MB',
+          price: 19.99,
+          originalPrice: 24.99,
+          description: 'Compact and efficient stock cooler design',
+          category: 'CPU Coolers',
+          seller: 'ProcessorParts Inc',
+          rating: 4.5,
+          downloads: 456
+        },
+        {
+          id: 'item-5',
+          name: 'NZXT Kraken Elite 360mm',
+          color: '#607D8B',
+          icon: 'fas fa-cube',
+          size: '2.7 MB',
+          price: 39.99,
+          originalPrice: 49.99,
+          description: 'Elite-class AIO cooler with customizable LCD display',
+          category: 'Premium Cooling',
+          seller: 'EliteDesigns Co',
+          rating: 4.9,
+          downloads: 198
+        }
+      ];
+
+      try {
+        // Load user-submitted designs from localDB
+        const designs = await localDB.getDesigns();
+        console.log('Loaded designs from localDB:', designs);
+        
+        const marketplaceDesigns = designs.map((design: any) => {
+          console.log('Processing design:', design.name, 'fileURL:', design.fileURL);
+          return {
+            id: design.id,
+            name: design.name,
+            description: design.description,
+            price: design.price,
+            originalPrice: design.originalPrice,
+            color: design.color,
+            icon: design.icon,
+            size: design.fileSize,
+            category: design.category,
+            seller: design.seller,
+            rating: design.rating,
+            downloads: design.downloads,
+            fileURL: design.fileURL, // Include file URL for viewing
+            fileBase64: design.fileBase64, // Include base64 data for viewing
+            fileType: design.fileType // Include file type
+          };
+        });
+
+        // Combine marketplace designs with default items
+        const allItems = [...marketplaceDesigns, ...defaultItems];
+        setStoreItems(allItems);
+      } catch (error) {
+        console.error('Error loading store items:', error);
+        // Fall back to default items only
+        setStoreItems(defaultItems);
+      }
+    };
+
+    loadStoreItems();
+  }, [refreshTrigger]);
 
   const handleBuyNow = (item: StoreItem) => {
     // Add to cart and immediately show cart
