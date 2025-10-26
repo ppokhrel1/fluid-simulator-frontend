@@ -3,6 +3,7 @@ import ThreeJSCanvas from '../ModelRender/ThreeJSCanvas';
 import Header from '../ModelRender/Header';
 import LeftDock from '../ModelRender/LeftDock';
 import Chatbot from '../ai_system/chatbot';
+import StorePage from '../Store/StorePage';
 import BottomControlDock from '../ModelRender/BottomControlDock';
 import PressureLegend from '../ModelRender/PressureLegend';
 import type { AppState, ThreeJSActions, FileData, ChatMessage } from '../../types';
@@ -145,13 +146,17 @@ export const MainPageApp: React.FC = () => {
       </div>
 
       {/* Main Content - Fullscreen 3D */}
-      <div className="position-fixed inset-0 w-100 h-100" style={{ top: '60px' }}>
-        <ThreeJSCanvas 
-          ref={threeRef}
-          onStateUpdate={updateAppState}
-          appState={appState}
-        />
-      </div>
+      {appState.view === 'store' ? (
+        <StorePage onBack={() => updateAppState({ view: 'main' })} />
+      ) : (
+        <div className="position-fixed inset-0 w-100 h-100" style={{ top: '60px' }}>
+          <ThreeJSCanvas 
+            ref={threeRef}
+            onStateUpdate={updateAppState}
+            appState={appState}
+          />
+        </div>
+      )}
 
       {/* Floating Chatbot Panel */}
       <div className="position-fixed" style={{ top: '76px', right: '16px', width: '400px', zIndex: 1040 }}>
@@ -164,88 +169,128 @@ export const MainPageApp: React.FC = () => {
 
       {/* Floating Action Buttons */}
       <div className="fab-container">
-        <button
-          className={`fab-button ${appState.gridVisible ? 'active' : ''}`}
-          onClick={handleToggleGrid}
-        >
-          Grid
-        </button>
+        {appState.view === 'main' ? (
+          <>
+            <button
+              className="fab-button"
+              onClick={() => updateAppState({ view: 'store' })}
+            >
+              Store
+            </button>
 
-        <button
-          className={`fab-button ${appState.autoRotateEnabled ? 'active' : ''}`}
-          onClick={handleAutoRotate}
-        >
-          Auto Rotate
-        </button>
+            <button
+              className={`fab-button ${appState.gridVisible ? 'active' : ''}`}
+              onClick={handleToggleGrid}
+            >
+              Grid
+            </button>
 
-        <button
-          className="fab-button"
-          onClick={handleResetView}
-        >
-          Reset View
-        </button>
+            <button
+              className={`fab-button ${appState.autoRotateEnabled ? 'active' : ''}`}
+              onClick={handleAutoRotate}
+            >
+              Auto Rotate
+            </button>
 
-        <button
-          className="fab-button"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          Upload
-        </button>
+            <button
+              className="fab-button"
+              onClick={handleResetView}
+            >
+              Reset View
+            </button>
 
-          <button
-            className="fab-button"
-            onClick={() => handleThreeAction('takeScreenshot')}
-          >
-            Screenshot
-          </button>
+            <button
+              className="fab-button"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload
+            </button>
 
-          {/* Hidden file input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="d-none"
-            accept=".stl,.obj,.step,.stp,.iges,.glb"
-            onChange={handleFileInputChange}
-          />
+            <button
+              className="fab-button"
+              onClick={() => handleThreeAction('takeScreenshot')}
+            >
+              Screenshot
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className="fab-button"
+              onClick={() => updateAppState({ view: 'main' })}
+            >
+              Back
+            </button>
+            <button
+              className="fab-button"
+              onClick={() => console.log('Sort by price')}
+            >
+              Sort by Price
+            </button>
+            <button
+              className="fab-button"
+              onClick={() => console.log('Filter')}
+            >
+              Filter
+            </button>
+            <button
+              className="fab-button"
+              onClick={() => console.log('My Cart')}
+            >
+              Cart
+            </button>
+          </>
+        )}
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="d-none"
+          accept=".stl,.obj,.step,.stp,.iges,.glb"
+          onChange={handleFileInputChange}
+        />
         </div>
 
-        {/* Pressure Distribution Legend */}
-        <div className="position-fixed start-0 ms-4 rounded chat-container" 
-             style={{ 
-               zIndex: 1040, 
-               top: '50%', 
-               transform: 'translateY(-50%)',
-               padding: '1rem',
-               background: 'rgba(0, 0, 0, 0.7)',
-               backdropFilter: 'blur(10px)',
-               border: '1px solid rgba(255, 255, 255, 0.1)'
-             }}>
-            <div className="d-flex flex-column align-items-center gap-2">
-              <div className="text-white small mb-1 fw-bold">
-                High
-              </div>
+        {/* Pressure Distribution Legend - Only show in main view */}
+        {appState.view === 'main' && (
+          <div className="position-fixed start-0 ms-4 rounded chat-container" 
+               style={{ 
+                 zIndex: 1040, 
+                 top: '50%', 
+                 transform: 'translateY(-50%)',
+                 padding: '1rem',
+                 background: 'rgba(0, 0, 0, 0.7)',
+                 backdropFilter: 'blur(10px)',
+                 border: '1px solid rgba(255, 255, 255, 0.1)'
+               }}>
+              <div className="d-flex flex-column align-items-center gap-2">
+                <div className="text-white small mb-1 fw-bold">
+                  High
+                </div>
 
-              <div
-                style={{
-                  width: '28px',
-                  height: '220px',
-                  background: 'linear-gradient(to bottom, #F44336, #FFC107, #4CAF50)',
-                  borderRadius: '14px',
-                  boxShadow: '0 6px 20px rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.3)',
-                  border: '2px solid rgba(255,255,255,0.04)'
-                }}
-              />
+                <div
+                  style={{
+                    width: '28px',
+                    height: '220px',
+                    background: 'linear-gradient(to bottom, #F44336, #FFC107, #4CAF50)',
+                    borderRadius: '14px',
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.4) inset, 0 4px 12px rgba(0,0,0,0.3)',
+                    border: '2px solid rgba(255,255,255,0.04)'
+                  }}
+                />
 
-              <div className="text-white small mt-1 fw-bold">
-                Low
-              </div>
+                <div className="text-white small mt-1 fw-bold">
+                  Low
+                </div>
 
-              {/* Horizontal caption for easier reading */}
-              <div className="text-white-50 small text-center mt-2" style={{ width: '140px' }}>
-                Pressure Distribution
+                {/* Horizontal caption for easier reading */}
+                <div className="text-white-50 small text-center mt-2" style={{ width: '140px' }}>
+                  Pressure Distribution
+                </div>
               </div>
-            </div>
-        </div>
+          </div>
+        )}
       </div>
     );
   };export default MainPageApp;

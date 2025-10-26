@@ -45,7 +45,7 @@ export interface AppState {
   status: string;
   uploadedFiles: (FileData | UploadedModel)[]; // <- allow both
   isTyping: boolean;
-  view: 'main' | 'models-list';
+  view: 'main' | 'models-list' | 'store';
 }
 
 
