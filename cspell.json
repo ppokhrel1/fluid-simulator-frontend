@@ -1,6 +1,6 @@
 {
     "version": "0.2",
-    "words": ["autofix", "autofixable", "browserconfig", "corejs", "lcov", "msapplication", "mstile"],
+    "words": ["autofix", "autofixable", "browserconfig", "corejs", "lcov", "msapplication", "mstile", "curfd", "curfdlogo", "CURFD", "iges", "Thermalright", "NZXT"],
     "ignorePaths": ["package.json", "package-lock.json"],
     "useGitignore": true,
     "validateDirectives": true,
