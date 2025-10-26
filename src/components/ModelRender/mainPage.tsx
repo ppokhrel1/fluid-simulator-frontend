@@ -4,14 +4,16 @@ import ControlsHint from '../ModelRender/ControlsHint';
 import Header from '../ModelRender/Header';
 import LeftDock from '../ModelRender/LeftDock';
 import Chatbot from '../ai_system/chatbot';
-import StorePage from '../Store/StorePage';
+import StorePage, { type StoreItem } from '../Store/StorePage';
 import SellDesignModal, { type SellDesignFormData } from '../ModelRender/SellDesignModal';
 import AuthModal, { type UserData } from '../Auth/AuthModal';
+import CartModal, { type CartItem } from '../Store/CartModal';
 import BottomControlDock from '../ModelRender/BottomControlDock';
 import PressureLegend from '../ModelRender/PressureLegend';
 import type { AppState, ThreeJSActions, FileData, ChatMessage } from '../../types';
 import { sendMessageToAI } from '../ai_system/aiAdapter';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 export const MainPageApp: React.FC = () => {
   // Helper functions for localStorage persistence
@@ -98,6 +100,8 @@ export const MainPageApp: React.FC = () => {
   const [appState, setAppState] = useState<AppState>(initialStateData.state);
   const [showSellModal, setShowSellModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<UserData | null>(initialStateData.user);
   const [hasUploadedFile, setHasUploadedFile] = useState(initialStateData.hasFile);
   const [controlsHintTop, setControlsHintTop] = useState<number>(0);
@@ -360,6 +364,51 @@ export const MainPageApp: React.FC = () => {
     updateAppState({ status: 'Logged out successfully.' });
   };
 
+  // Cart handling functions
+  const handleAddToCart = (item: StoreItem) => {
+    setCartItems(prevItems => {
+      const existingItem = prevItems.find(cartItem => cartItem.id === item.id);
+      
+      if (existingItem) {
+        return prevItems.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      } else {
+        const newCartItem: CartItem = {
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          originalPrice: item.originalPrice,
+          size: item.size || '0 MB',
+          color: item.color,
+          icon: item.icon,
+          quantity: 1
+        };
+        return [...prevItems, newCartItem];
+      }
+    });
+  };
+
+  const handleUpdateCartQuantity = (id: string, quantity: number) => {
+    setCartItems(prevItems =>
+      prevItems.map(item =>
+        item.id === id ? { ...item, quantity } : item
+      )
+    );
+  };
+
+  const handleRemoveFromCart = (id: string) => {
+    setCartItems(prevItems => prevItems.filter(item => item.id !== id));
+  };
+
+  const handleCheckout = () => {
+    console.log('Proceeding to checkout with items:', cartItems);
+    alert('Checkout functionality will be implemented in the next phase!');
+    setShowCartModal(false);
+  };
+
   return (
     <div className="app vh-100 vw-100 p-0 m-0 bg-dark overflow-hidden">
       {/* Header with CURFD branding */}
@@ -437,7 +486,12 @@ export const MainPageApp: React.FC = () => {
 
       {/* Store Page - Overlay when in store view */}
       {appState.view === 'store' && (
-        <StorePage onBack={() => updateAppState({ view: 'main' })} />
+        <StorePage 
+          onBack={() => updateAppState({ view: 'main' })}
+          cartItems={cartItems}
+          onAddToCart={handleAddToCart}
+          onShowCart={() => setShowCartModal(true)}
+        />
       )}
 
       {/* Floating Chatbot Panel */}
@@ -541,9 +595,27 @@ export const MainPageApp: React.FC = () => {
             </button>
             <button
               className="fab-button"
-              onClick={() => console.log('My Cart')}
+              onClick={() => setShowCartModal(true)}
+              style={{ position: 'relative' }}
             >
+              <i className="fas fa-shopping-cart me-2"></i>
               Cart
+              {cartItems.length > 0 && (
+                <span 
+                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill"
+                  style={{
+                    background: '#dc3545',
+                    fontSize: '0.7rem',
+                    minWidth: '20px',
+                    height: '20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+                </span>
+              )}
             </button>
           </>
         )}
@@ -641,6 +713,16 @@ export const MainPageApp: React.FC = () => {
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
         initialMode="signup"
+      />
+
+      {/* Cart Modal */}
+      <CartModal
+        show={showCartModal}
+        onClose={() => setShowCartModal(false)}
+        cartItems={cartItems}
+        onUpdateQuantity={handleUpdateCartQuantity}
+        onRemoveItem={handleRemoveFromCart}
+        onCheckout={handleCheckout}
       />
     </div>
   );

@@ -29,6 +29,7 @@
         "deploy": "gh-pages -d dist"
     },
     "dependencies": {
+        "@fortawesome/fontawesome-free": "^7.1.0",
         "@react-three/drei": "^10.7.6",
         "@react-three/fiber": "^9.4.0",
         "bootstrap": "^5.3.8",

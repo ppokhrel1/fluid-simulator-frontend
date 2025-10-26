@@ -1,43 +1,77 @@
 import React from 'react';
 import type { FileData } from '../../types';
+import { type CartItem } from './CartModal';
 
 interface StorePageProps {
   onBack: () => void;
+  cartItems: CartItem[];
+  onAddToCart: (item: StoreItem) => void;
+  onShowCart: () => void;
 }
 
-const StorePage: React.FC<StorePageProps> = ({ onBack }) => {
-  const storeItems: FileData[] = [
+export interface StoreItem extends FileData {
+  id: string;
+  price: number;
+  originalPrice?: number;
+}
+
+const StorePage: React.FC<StorePageProps> = ({ onBack, cartItems, onAddToCart, onShowCart }) => {
+
+  const storeItems: StoreItem[] = [
     {
+      id: 'item-1',
       name: 'ARCTIC Liquid Freezer III Pro A-RGB',
       color: '#4CAF50',
       icon: 'fas fa-cube',
-      size: '2.5 MB'
+      size: '2.5 MB',
+      price: 29.99,
+      originalPrice: 39.99
     },
     {
+      id: 'item-2',
       name: 'Corsair NAUTILUS Water 360mm',
       color: '#2196F3',
       icon: 'fas fa-cube',
-      size: '3.1 MB'
+      size: '3.1 MB',
+      price: 34.99,
+      originalPrice: 44.99
     },
     {
+      id: 'item-3',
       name: 'Thermalright Peerless Assassin',
       color: '#9C27B0',
       icon: 'fas fa-cube',
-      size: '1.8 MB'
+      size: '1.8 MB',
+      price: 24.99,
+      originalPrice: 29.99
     },
     {
+      id: 'item-4',
       name: 'AMD Wraith Stealth Socket',
       color: '#FF5722',
       icon: 'fas fa-cube',
-      size: '2.2 MB'
+      size: '2.2 MB',
+      price: 19.99,
+      originalPrice: 24.99
     },
     {
+      id: 'item-5',
       name: 'NZXT Kraken Elite 360mm',
       color: '#607D8B',
       icon: 'fas fa-cube',
-      size: '2.7 MB'
+      size: '2.7 MB',
+      price: 39.99,
+      originalPrice: 49.99
     }
   ];
+
+  const handleBuyNow = (item: StoreItem) => {
+    // Add to cart and immediately show cart
+    onAddToCart(item);
+    setTimeout(() => {
+      onShowCart();
+    }, 100);
+  };
 
   return (
     <div 
@@ -111,36 +145,68 @@ const StorePage: React.FC<StorePageProps> = ({ onBack }) => {
                               className="fw-bold text-success me-2" 
                               style={{ fontSize: '1.8rem' }}
                             >
-                              $29.99
+                              ${item.price}
                             </span>
-                            <small className="text-white-50 text-decoration-line-through">$39.99</small>
+                            {item.originalPrice && (
+                              <small className="text-white-50 text-decoration-line-through">
+                                ${item.originalPrice}
+                              </small>
+                            )}
                           </div>
                           <small className="text-success fw-semibold">25% OFF Limited Time!</small>
                         </div>
                         
-                        <button 
-                          className="btn btn-lg px-4 fw-bold"
-                          style={{
-                            background: 'linear-gradient(135deg, #28a745, #20c997)',
-                            border: 'none',
-                            color: 'white',
-                            borderRadius: '50px',
-                            fontSize: '0.9rem',
-                            boxShadow: '0 4px 15px rgba(40, 167, 69, 0.3)',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = 'translateY(-2px)';
-                            e.currentTarget.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = 'translateY(0px)';
-                            e.currentTarget.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
-                          }}
-                        >
-                          <i className="fas fa-shopping-cart me-2"></i>
-                          Buy Now
-                        </button>
+                        <div className="d-flex gap-2">
+                          <button 
+                            className="btn px-3 fw-bold"
+                            onClick={() => onAddToCart(item)}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.1)',
+                              border: '1px solid rgba(255, 255, 255, 0.3)',
+                              color: 'white',
+                              borderRadius: '50px',
+                              fontSize: '0.85rem',
+                              transition: 'all 0.2s ease',
+                              minWidth: '45px',
+                              height: '45px'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0px)';
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                            }}
+                          >
+                            <i className="fas fa-cart-plus"></i>
+                          </button>
+                          
+                          <button 
+                            className="btn btn-lg px-4 fw-bold"
+                            onClick={() => handleBuyNow(item)}
+                            style={{
+                              background: 'linear-gradient(135deg, #28a745, #20c997)',
+                              border: 'none',
+                              color: 'white',
+                              borderRadius: '50px',
+                              fontSize: '0.9rem',
+                              boxShadow: '0 4px 15px rgba(40, 167, 69, 0.3)',
+                              transition: 'all 0.2s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                              e.currentTarget.style.boxShadow = '0 6px 20px rgba(40, 167, 69, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0px)';
+                              e.currentTarget.style.boxShadow = '0 4px 15px rgba(40, 167, 69, 0.3)';
+                            }}
+                          >
+                            <i className="fas fa-shopping-cart me-2"></i>
+                            Buy Now
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -155,6 +221,7 @@ const StorePage: React.FC<StorePageProps> = ({ onBack }) => {
           </div>
         </div>
       </div>
+
     </div>
   );
 };
