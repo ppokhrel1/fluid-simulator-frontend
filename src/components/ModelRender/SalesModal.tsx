@@ -5,6 +5,7 @@ interface SalesModalProps {
   show: boolean;
   onClose: () => void;
   user: any;
+  onUploadDesign?: () => void;
 }
 
 interface DesignAsset {
@@ -59,7 +60,7 @@ interface PayoutStats {
   minimumPayout: number;
 }
 
-const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user }) => {
+const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user, onUploadDesign }) => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
   // Mock data for demonstration - in real app, this would come from API
@@ -529,7 +530,11 @@ const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user }) => {
                       </p>
                     </div>
                     <div className="col-md-4 text-end">
-                      <button className="btn btn-light btn-lg" style={{ fontWeight: 'bold', color: '#059669' }}>
+                      <button 
+                        className="btn btn-light btn-lg" 
+                        style={{ fontWeight: 'bold', color: '#059669' }}
+                        onClick={onUploadDesign}
+                      >
                         <i className="fas fa-plus me-2"></i>
                         Upload New Design
                       </button>
@@ -671,12 +676,16 @@ const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user }) => {
                       </Card.Header>
                       <Card.Body>
                         <div className="d-grid gap-3">
-                          <button className="btn btn-outline-light" style={{ 
-                            borderColor: '#10B981', 
-                            color: '#10B981',
-                            borderRadius: '10px',
-                            fontWeight: '600'
-                          }}>
+                          <button 
+                            className="btn btn-outline-light" 
+                            style={{ 
+                              borderColor: '#10B981', 
+                              color: '#10B981',
+                              borderRadius: '10px',
+                              fontWeight: '600'
+                            }}
+                            onClick={onUploadDesign}
+                          >
                             <i className="fas fa-upload me-2"></i>
                             Upload New Design
                           </button>
@@ -762,7 +771,10 @@ const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user }) => {
                       Manage your {assets.length} designs • {assets.filter(a => a.status === 'active').length} active listings
                     </p>
                   </div>
-                  <button className="btn btn-primary gradient-btn">
+                  <button 
+                    className="btn btn-primary gradient-btn"
+                    onClick={onUploadDesign}
+                  >
                     <i className="fas fa-cloud-upload-alt me-2"></i>
                     Upload New Design
                   </button>
@@ -904,6 +916,7 @@ const SalesModal: React.FC<SalesModalProps> = ({ show, onClose, user }) => {
                       transition: 'all 0.3s ease'
                     }}
                     className="d-flex align-items-center justify-content-center text-center"
+                    onClick={onUploadDesign}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-4px)';
                       e.currentTarget.style.borderColor = '#059669';

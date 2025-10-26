@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Form } from 'react-bootstrap';
 
 interface SellDesignModalProps {
   show: boolean;
   onClose: () => void;
   onSubmit: (formData: SellDesignFormData) => void;
+  uploadedFile?: {
+    name: string;
+    size?: string;
+    [key: string]: any;
+  };
 }
 
 export interface SellDesignFormData {
@@ -21,7 +26,7 @@ export interface SellDesignFormData {
   instructions: string;
 }
 
-const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubmit }) => {
+const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubmit, uploadedFile }) => {
   const [formData, setFormData] = useState<SellDesignFormData>({
     designName: '',
     description: '',
@@ -35,6 +40,22 @@ const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubm
     tags: '',
     instructions: ''
   });
+
+  // Update form data when uploadedFile changes
+  useEffect(() => {
+    if (uploadedFile && uploadedFile.name) {
+      // Remove file extension and clean up the name for design title
+      const nameWithoutExtension = uploadedFile.name.replace(/\.[^/.]+$/, '');
+      const cleanName = nameWithoutExtension
+        .replace(/[_-]/g, ' ')
+        .replace(/\b\w/g, (l: string) => l.toUpperCase());
+      
+      setFormData(prev => ({
+        ...prev,
+        designName: cleanName
+      }));
+    }
+  }, [uploadedFile]);
 
   // Common input styles
   const inputStyle = {
@@ -153,6 +174,64 @@ const SellDesignModal: React.FC<SellDesignModalProps> = ({ show, onClose, onSubm
             <i className="fas fa-info-circle me-2"></i>
             Fill out the details below to list your design on our marketplace. All fields marked with * are required.
           </div>
+
+          {/* Uploaded File Info */}
+          {uploadedFile && (
+            <div 
+              className="mb-4 p-3" 
+              style={{ 
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '12px',
+                color: 'white'
+              }}
+            >
+              <div className="d-flex align-items-center">
+                <div 
+                  className="me-3"
+                  style={{
+                    width: '50px',
+                    height: '50px',
+                    background: 'linear-gradient(135deg, #10B981, #059669)',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <i className="fas fa-cube" style={{ fontSize: '1.5rem', color: 'white' }}></i>
+                </div>
+                <div className="flex-grow-1">
+                  <h6 style={{ margin: 0, color: '#10B981', fontWeight: 'bold' }}>
+                    <i className="fas fa-check-circle me-2"></i>
+                    Design File Ready
+                  </h6>
+                  <div style={{ fontSize: '1rem', fontWeight: '600', color: 'white', marginTop: '0.25rem' }}>
+                    {uploadedFile.name}
+                  </div>
+                  {uploadedFile.size && (
+                    <small style={{ color: '#9CA3AF' }}>
+                      File size: {uploadedFile.size}
+                    </small>
+                  )}
+                </div>
+                <div className="text-end">
+                  <span 
+                    className="badge"
+                    style={{ 
+                      background: '#10B981', 
+                      color: 'white',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    Uploaded & Analyzed
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Design Name */}
           <Form.Group className="mb-3">

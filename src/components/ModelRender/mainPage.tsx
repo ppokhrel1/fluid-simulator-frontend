@@ -105,6 +105,7 @@ export const MainPageApp: React.FC = () => {
   const [showCartModal, setShowCartModal] = useState(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<UserData | null>(initialStateData.user);
+  const [loginSource, setLoginSource] = useState<'header' | 'sellDesign'>('header');
   const [hasUploadedFile, setHasUploadedFile] = useState(initialStateData.hasFile);
   const [controlsHintTop, setControlsHintTop] = useState<number>(0);
   const [wasRefreshedInStore, setWasRefreshedInStore] = useState(initialStateData.state.view === 'store' && initialStateData.hasFile);
@@ -331,12 +332,35 @@ export const MainPageApp: React.FC = () => {
     handleThreeAction('toggleAutoRotate');
   };
 
-  const handleSellDesignClick = () => {
+  const handleSalesClick = () => {
     if (user) {
       // User is authenticated, show sales dashboard
       setShowSalesModal(true);
     } else {
       // User not authenticated, show auth modal first
+      setShowAuthModal(true);
+    }
+  };
+
+  const handleSellDesignClick = () => {
+    if (user) {
+      // User is authenticated, check if they have uploaded a file
+      if (hasUploadedFile && appState.uploadedFiles.length > 0) {
+        // User has uploaded file(s), show sell design modal
+        setShowSellModal(true);
+      } else {
+        // User is logged in but hasn't uploaded any design yet
+        updateAppState({ 
+          status: 'Please upload a 3D design file first before listing it for sale. Opening file picker...' 
+        });
+        // Trigger file upload after showing message
+        setTimeout(() => {
+          fileInputRef.current?.click();
+        }, 2000);
+      }
+    } else {
+      // User not authenticated, show auth modal first
+      setLoginSource('sellDesign');
       setShowAuthModal(true);
     }
   };
@@ -353,6 +377,15 @@ export const MainPageApp: React.FC = () => {
     }, 500);
   };
 
+  const handleHeaderAuthSuccess = (userData: UserData) => {
+    setUser(userData);
+    setShowAuthModal(false);
+    updateAppState({ 
+      status: `Welcome ${userData.firstName}! Logged in successfully.` 
+    });
+    // Don't show sell modal - just complete the login
+  };
+
   const handleSellDesignSubmit = (formData: SellDesignFormData) => {
     console.log('Design submitted for sale:', formData, 'by user:', user);
     // TODO: Implement API call to backend to save the design listing with user information
@@ -364,6 +397,20 @@ export const MainPageApp: React.FC = () => {
   const handleLogout = () => {
     setUser(null);
     updateAppState({ status: 'Logged out successfully.' });
+  };
+
+  const handleSalesModalUpload = () => {
+    // Close the sales modal first
+    setShowSalesModal(false);
+    // Switch to main view if not already there
+    updateAppState({ 
+      view: 'main',
+      status: 'Select a 3D file to upload and analyze...'
+    });
+    // Trigger the file input
+    setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 300);
   };
 
   // Cart handling functions
@@ -411,6 +458,28 @@ export const MainPageApp: React.FC = () => {
     setShowCartModal(false);
   };
 
+  // Handle viewing an item from the store
+  const handleViewItem = (item: StoreItem) => {
+    console.log('Viewing item:', item);
+    
+    // Switch back to main view to show the 3D model
+    updateAppState({ 
+      view: 'main',
+      status: `Previewing ${item.name} - ${item.description || 'Premium 3D design'}`
+    });
+    
+    // Simulate loading the 3D model for preview
+    // In a real implementation, you would load the actual 3D file here
+    setTimeout(() => {
+      updateAppState({ 
+        status: `${item.name} loaded successfully! This is a preview - purchase to download the full model.`
+      });
+    }, 1000);
+    
+    // You could also trigger the ThreeJS canvas to load a preview version
+    // or show a modal with more details about the item
+  };
+
   return (
     <div className="app vh-100 vw-100 p-0 m-0 bg-dark overflow-hidden">
       {/* Header with CURFD branding */}
@@ -428,7 +497,8 @@ export const MainPageApp: React.FC = () => {
           </div>
         </div>
         <div className="ms-auto d-flex align-items-center gap-3">
-          {user && (
+          <span className="text-white-50">{appState.status}</span>
+          {user ? (
             <div className="d-flex align-items-center gap-2">
               <div 
                 className="rounded-circle d-flex align-items-center justify-content-center"
@@ -464,8 +534,35 @@ export const MainPageApp: React.FC = () => {
                 </button>
               </div>
             </div>
+          ) : (
+            <button
+              onClick={() => {
+                setLoginSource('header');
+                setShowAuthModal(true);
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                border: 'none',
+                color: 'white',
+                fontSize: '0.9rem',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(102, 126, 234, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              Login
+            </button>
           )}
-          <span className="text-white-50">{appState.status}</span>
         </div>
       </div>
 
@@ -493,6 +590,7 @@ export const MainPageApp: React.FC = () => {
           cartItems={cartItems}
           onAddToCart={handleAddToCart}
           onShowCart={() => setShowCartModal(true)}
+          onViewItem={handleViewItem}
         />
       )}
 
@@ -558,20 +656,66 @@ export const MainPageApp: React.FC = () => {
               Screenshot
             </button>
 
-            {hasUploadedFile && (
+            {user && (
+              <>
+                <button
+                  className="fab-button"
+                  onClick={handleSalesClick}
+                  style={{ 
+                    minWidth: '100px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <span>Sales</span>
+                </button>
+                <button
+                  className="fab-button"
+                  onClick={handleSellDesignClick}
+                  style={{ 
+                    minWidth: '120px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.3rem',
+                    whiteSpace: 'nowrap',
+                    ...(hasUploadedFile && appState.uploadedFiles.length > 0 ? {
+                      background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                      border: '2px solid #10B981',
+                      boxShadow: '0 0 15px rgba(16, 185, 129, 0.5)',
+                      transform: 'scale(1.02)'
+                    } : {
+                      opacity: 0.7
+                    })
+                  }}
+                  title={hasUploadedFile && appState.uploadedFiles.length > 0 ? 
+                    `Sell "${appState.uploadedFiles[appState.uploadedFiles.length - 1]?.name}"` : 
+                    'Upload a design file first to enable selling'
+                  }
+                >
+                  <span style={{ color: '#FFD700', fontSize: '1.1rem', fontWeight: 'bold' }}>$</span>
+                  <span>Sell Design</span>
+                </button>
+              </>
+            )}
+            {hasUploadedFile && !user && (
               <button
                 className="fab-button"
                 onClick={handleSellDesignClick}
                 style={{ 
-                  minWidth: '140px',
+                  minWidth: '120px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.5rem'
+                  gap: '0.3rem',
+                  whiteSpace: 'nowrap'
                 }}
               >
                 <span style={{ color: '#FFD700', fontSize: '1.1rem', fontWeight: 'bold' }}>$</span>
-                <span>{user ? 'Sales' : 'Sell Design'}</span>
+                <span>Sell Design</span>
               </button>
             )}
           </>
@@ -707,6 +851,10 @@ export const MainPageApp: React.FC = () => {
         show={showSellModal}
         onClose={() => setShowSellModal(false)}
         onSubmit={handleSellDesignSubmit}
+        uploadedFile={appState.uploadedFiles.length > 0 ? {
+          ...appState.uploadedFiles[appState.uploadedFiles.length - 1],
+          size: (appState.uploadedFiles[appState.uploadedFiles.length - 1] as any).size || 'Unknown size'
+        } : undefined}
       />
 
       {/* Sales Dashboard Modal */}
@@ -714,13 +862,14 @@ export const MainPageApp: React.FC = () => {
         show={showSalesModal}
         onClose={() => setShowSalesModal(false)}
         user={user}
+        onUploadDesign={handleSalesModalUpload}
       />
 
       {/* Authentication Modal */}
       <AuthModal
         show={showAuthModal}
         onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
+        onAuthSuccess={loginSource === 'header' ? handleHeaderAuthSuccess : handleAuthSuccess}
         initialMode="signup"
       />
 
