@@ -24,7 +24,8 @@ export const MainPageApp: React.FC = () => {
     uploadedFiles: [],
     status: 'Ready for analysis',
     gridVisible: true,
-    autoRotateEnabled: false
+    autoRotateEnabled: false,
+    view: 'main'
   });
 
   const threeRef = useRef<ThreeJSActions>(null);

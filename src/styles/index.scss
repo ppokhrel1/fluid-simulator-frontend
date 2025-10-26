@@ -1,7 +1,7 @@
 /* Import component styles */
-@import './branding.scss';
-@import './docks.scss';
-@import './controls.scss';
+@use './branding';
+@use './docks';
+@use './controls';
 
 /* Global app styles */
 :root {

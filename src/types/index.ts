@@ -20,16 +20,34 @@ export interface AIModel {
   description: string;
 }
 
+export interface UploadedModel {
+  id: string;
+  name: string;
+  fileName: string;
+  uploadDate: string;
+  fileSize: string;
+  type: string;
+  analysisStatus: 'pending' | 'in-progress' | 'completed' | 'error';
+  lastOpened: string | null;
+  thumbnail?: string;
+  tags: string[];
+  description?: string;
+  webLink?: string;
+  file?: File;
+}
+
 export interface AppState {
-  leftDockExpanded: boolean;
-  isTyping: boolean;
-  chatMessages: ChatMessage[];
-  selectedAiModel: string;
-  uploadedFiles: FileData[];
-  status: string;
   gridVisible: boolean;
   autoRotateEnabled: boolean;
+  chatMessages: ChatMessage[];
+  leftDockExpanded: boolean;
+  selectedAiModel: string;
+  status: string;
+  uploadedFiles: (FileData | UploadedModel)[]; // <- allow both
+  isTyping: boolean;
+  view: 'main' | 'models-list';
 }
+
 
 export interface ThreeJSActions {
   loadFile: (file: File) => void;

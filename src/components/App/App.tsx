@@ -5,6 +5,8 @@ import React from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import MainPageApp from '../ModelRender/mainPage'; // Assuming you have these components
 import './App.css';
+import ModelsListPage from '../listings/ModelsListing';
+import { UpdateModelDemo } from '../listings/uploadModelIndex';
 
 export function App() {
   return (
@@ -14,7 +16,11 @@ export function App() {
       </nav>
       <Routes>
         <Route path="/" element={<MainPageApp />} />
-        {/* <Route path="/about" element={<About />} /> */}
+        <Route path="/feed" element={<ModelsListPage 
+          onModelSelect={(model: any) => console.log('Selected:', model)}
+          onBackToMain={() => window.history.back()}
+        />} />
+        <Route path="/upload" element={<UpdateModelDemo />} />
         {/* <Route path="/contact" element={<Contact />} /> */}
         {/* You can also add a catch-all route for 404 pages */}
         {/* <Route path="*" element={<NotFound />} /> */}
