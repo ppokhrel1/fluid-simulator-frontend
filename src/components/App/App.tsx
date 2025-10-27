@@ -9,12 +9,13 @@ import ModelsListPage from '../listings/ModelsListing';
 import { UpdateModelDemo } from '../listings/UploadModelDemo';
 import LoginPage from '../listings/LoginPage';
 import { AuthProvider } from '~/contexts/AuthContext';
+import ComprehensiveBackendTester from '../common/ComprehensiveBackendTester';
 
 export function App() {
   return (
     <div>
       <nav>
-        <Link to="/">Home</Link> | <Link to="/about">About</Link> | <Link to="/contact">Contact</Link>
+        <Link to="/">Home</Link> | <Link to="/feed">Models</Link> | <Link to="/upload">Upload</Link> | <Link to="/login">Login</Link> | <Link to="/test-backend">Test Backend</Link>
       </nav>
       <AuthProvider>
       <Routes>
@@ -26,6 +27,7 @@ export function App() {
         />} />
         <Route path="/upload" element={<UpdateModelDemo />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/test-backend" element={<ComprehensiveBackendTester />} />
         {/* <Route path="/contact" element={<Contact />} /> */}
         {/* You can also add a catch-all route for 404 pages */}
         {/* <Route path="*" element={<NotFound />} /> */}

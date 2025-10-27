@@ -13,6 +13,7 @@ import BottomControlDock from '../ModelRender/BottomControlDock';
 import PressureLegend from '../ModelRender/PressureLegend';
 import type { AppState, ThreeJSActions, FileData, ChatMessage } from '../../types';
 import { sendMessageToAI } from '../ai_system/aiAdapter';
+import EnhancedBackendTester from '../common/EnhancedBackendTester';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 

@@ -49,10 +49,12 @@ export interface AnalysisResult {
 
 export interface User {
   id: number;
+  name: string;           // Backend field name
+  username: string;       // Backend field name  
   email: string;
-  full_name: string;
+  profile_image_url?: string;
   is_superuser: boolean;
-  is_active: boolean;
+  tier_id?: number | null;
 }
 
 export interface AppState {

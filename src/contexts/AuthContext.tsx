@@ -45,17 +45,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const register = async (username: string, email: string, password: string, fullName: string) => {
-    const response = await authAPI.register({ 
+    // Enhanced backend creates user but doesn't return token, so we need to login afterwards
+    const userData = await authAPI.register({ 
       username,
       email, 
       password, 
       full_name: fullName 
     });
-    localStorage.setItem('authToken', response.access_token);
     
-    // Fetch user profile after successful registration
-    const userData = await authAPI.getProfile();
-    setUser(userData);
+    // Now login with the created user
+    await login(username, password);
   };
 
   const logout = () => {

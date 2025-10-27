@@ -5,8 +5,8 @@ export const randomDefaults = {
 
 // config.ts
 const config = {
-  apiUrl: 'http://localhost:8000',
-  googleOAuthUrl: 'http://localhost:8000/auth/google',
+  apiUrl: 'http://127.0.0.1:8000',
+  googleOAuthUrl: 'http://127.0.0.1:8000/auth/google',
 };
 
 export default config;
