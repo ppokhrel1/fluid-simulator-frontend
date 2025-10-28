@@ -33,7 +33,7 @@ export default function () {
         },
         devServer: {
             hot: true,
-            port: 7579,
+            port: 3000,
             static: false,
             compress: true,
             host: "localhost",
@@ -42,7 +42,15 @@ export default function () {
                 logging: "warn",
                 overlay: false,
             },
-            historyApiFallback: true,
+            historyApiFallback: {
+                index: '/index.html',
+                disableDotRule: true,
+            },
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+                'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+            }
         },
         watchOptions: {
             ignored: /node_modules/,

@@ -700,7 +700,13 @@ const ThreeJSCanvas = forwardRef<ThreeJSActions, ThreeJSCanvasProps>(({ onStateU
 
       {/* Clear all markers button - only show when markers exist */}
       {pressureMarkers.length > 0 && (
-        <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 2000 }}>
+        <div style={{ 
+          position: 'absolute', 
+          top: 12, 
+          left: '50%', 
+          transform: 'translateX(-50%)', 
+          zIndex: 2000 
+        }}>
           <button
             className="btn btn-sm"
             onClick={clearAllMarkers}
@@ -711,7 +717,9 @@ const ThreeJSCanvas = forwardRef<ThreeJSActions, ThreeJSCanvasProps>(({ onStateU
               fontWeight: 600,
               fontSize: 12,
               padding: '6px 12px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              borderRadius: '6px',
+              whiteSpace: 'nowrap'
             }}
           >
             Clear All Markers ({pressureMarkers.length})

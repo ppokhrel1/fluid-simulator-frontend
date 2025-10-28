@@ -1,39 +1,73 @@
 
 
 // App.js
-import React from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import MainPageApp from '../ModelRender/mainPage'; // Assuming you have these components
 import './App.css';
 import ModelsListPage from '../listings/ModelsListing';
+import UploadPage from '../listings/UploadPage';
 import { UpdateModelDemo } from '../listings/UploadModelDemo';
 import LoginPage from '../listings/LoginPage';
-import { AuthProvider } from '~/contexts/AuthContext';
+import { AuthProvider, useAuth } from '~/contexts/AuthContext';
 import ComprehensiveBackendTester from '../common/ComprehensiveBackendTester';
+import ErrorBoundary from '../common/ErrorBoundary';
+import UserDashboard from '../Auth/UserDashboard';
+import { saveCurrentRoute } from '../../utils/stateUtils';
 
-export function App() {
+const AppContent: React.FC = () => {
+  const { loading } = useAuth();
+  const location = useLocation();
+  
+  // Save current route for state persistence
+  useEffect(() => {
+    saveCurrentRoute(location.pathname);
+  }, [location.pathname]);
+  
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        flexDirection: 'column'
+      }}>
+        <div style={{ fontSize: '48px', marginBottom: '20px' }}>🌊</div>
+        <div style={{ fontSize: '18px', color: '#007bff' }}>Loading Fluid Simulator...</div>
+        <div style={{ fontSize: '14px', color: '#666', marginTop: '10px' }}>Restoring your session</div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <nav>
-        <Link to="/">Home</Link> | <Link to="/feed">Models</Link> | <Link to="/upload">Upload</Link> | <Link to="/login">Login</Link> | <Link to="/test-backend">Test Backend</Link>
-      </nav>
-      <AuthProvider>
       <Routes>
-
         <Route path="/" element={<MainPageApp />} />
         <Route path="/feed" element={<ModelsListPage 
           onModelSelect={(model: any) => console.log('Selected:', model)}
           onBackToMain={() => window.history.back()}
         />} />
-        <Route path="/upload" element={<UpdateModelDemo />} />
+        <Route path="/upload" element={<UploadPage />} />
+        <Route path="/upload-demo" element={<UpdateModelDemo />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/dashboard" element={<UserDashboard onBack={() => window.history.back()} />} />
         <Route path="/test-backend" element={<ComprehensiveBackendTester />} />
         {/* <Route path="/contact" element={<Contact />} /> */}
         {/* You can also add a catch-all route for 404 pages */}
         {/* <Route path="*" element={<NotFound />} /> */}
       </Routes>
-      </AuthProvider>
     </div>
+  );
+};
+
+export function App() {
+  return (
+    <ErrorBoundary>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -37,77 +37,80 @@ const ControlsHint: React.FC<ControlsHintProps> = ({ visible, onClose, placement
       <div
         className="chat-container shadow"
         style={{
-          width: 280,
-          background: 'rgba(0,0,0,0.75)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: 14,
+          width: 300,
+          background: 'rgba(0, 0, 0, 0.8)', // Match pressure bar background
+          border: '1px solid rgba(255, 255, 255, 0.15)', // Match pressure bar border
+          backdropFilter: 'blur(12px)', // Match pressure bar blur
+          borderRadius: 12, // Consistent border radius
           color: 'white',
-          padding: '14px 14px 10px 14px'
+          padding: '16px',
+          marginLeft: '24px' // Exactly match pressure bar's ms-4 margin (1.5rem = 24px)
         }}
       >
         <div className="d-flex align-items-center mb-2">
           <div
-            className="me-2"
+            className="me-3"
             style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'linear-gradient(135deg, #9F7AEA, #6366F1)',
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
               display: 'grid',
               placeItems: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.35)'
+              boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)',
+              border: '1px solid rgba(59, 130, 246, 0.2)'
             }}
           >
-            <span style={{ fontWeight: 800 }}>i</span>
+            <i className="fas fa-mouse-pointer" style={{ fontSize: '14px', color: 'white' }}></i>
           </div>
           <div>
-            <div style={{ fontWeight: 700 }}>Navigation</div>
-            <div className="text-white-50" style={{ fontSize: 12 }}>Use your mouse to move around the model</div>
+            <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '2px' }}>Navigation</div>
+            <div className="text-white-50" style={{ fontSize: '13px' }}>Use your mouse to move around the model</div>
           </div>
           {/* Persistent hint: no dismiss button rendered */}
         </div>
 
-        {/* Joystick/Mouse diagram */}
-        <div className="d-flex align-items-center gap-3">
+        {/* Mouse diagram */}
+        <div className="d-flex align-items-center gap-4 mt-3">
           {/* Mouse icon */}
-          <div style={{ position: 'relative', width: 72, height: 104 }}>
+          <div style={{ position: 'relative', width: 70, height: 100 }}>
             <div
               style={{
-                width: 72,
-                height: 104,
-                borderRadius: 36,
-                background: 'linear-gradient(180deg, rgba(30,41,59,0.9), rgba(15,23,42,0.9))',
-                border: '1px solid rgba(255,255,255,0.08)',
+                width: 70,
+                height: 100,
+                borderRadius: 35,
+                background: 'linear-gradient(180deg, rgba(30,41,59,0.95), rgba(15,23,42,0.95))',
+                border: '1px solid rgba(255,255,255,0.1)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
               }}
             />
             {/* Left button */}
-            <div style={{ position: 'absolute', top: 8, left: 8, right: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.08)' }} />
+            <div style={{ position: 'absolute', top: 8, left: 8, right: 35, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.1)' }} />
             {/* Right button */}
-            <div style={{ position: 'absolute', top: 8, left: 36, right: 8, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.06)' }} />
+            <div style={{ position: 'absolute', top: 8, left: 35, right: 8, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.08)' }} />
             {/* Wheel */}
-            <div style={{ position: 'absolute', top: 16, left: '50%', transform: 'translateX(-50%)', width: 10, height: 24, borderRadius: 6, background: 'rgba(99,102,241,0.9)' }} />
+            <div style={{ position: 'absolute', top: 14, left: '50%', transform: 'translateX(-50%)', width: 8, height: 20, borderRadius: 4, background: 'rgba(34,211,238,0.9)' }} />
           </div>
 
           {/* Legend */}
           <div className="flex-grow-1">
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <div style={{ width: 8, height: 8, borderRadius: 4, background: '#ffffff' }} />
-              <div className="small"><strong>Left Click + Drag</strong> — Rotate</div>
+            <div className="d-flex align-items-center gap-3 mb-2">
+              <div style={{ width: 10, height: 10, borderRadius: 5, background: '#ffffff', flexShrink: 0 }} />
+              <div style={{ fontSize: '14px' }}><strong>Left Click + Drag</strong> — Rotate</div>
             </div>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <div style={{ width: 8, height: 8, borderRadius: 4, background: '#A5B4FC' }} />
-              <div className="small"><strong>Right Click + Drag</strong> — Pan</div>
+            <div className="d-flex align-items-center gap-3 mb-2">
+              <div style={{ width: 10, height: 10, borderRadius: 5, background: '#A5B4FC', flexShrink: 0 }} />
+              <div style={{ fontSize: '14px' }}><strong>Right Click + Drag</strong> — Pan</div>
             </div>
-            <div className="d-flex align-items-center gap-2">
-              <div style={{ width: 8, height: 8, borderRadius: 4, background: '#22D3EE' }} />
-              <div className="small"><strong>Mouse Wheel</strong> — Zoom</div>
+            <div className="d-flex align-items-center gap-3">
+              <div style={{ width: 10, height: 10, borderRadius: 5, background: '#22D3EE', flexShrink: 0 }} />
+              <div style={{ fontSize: '14px' }}><strong>Mouse Wheel</strong> — Zoom</div>
             </div>
           </div>
         </div>
 
-        <div className="text-white-50 mt-2" style={{ fontSize: 11 }}>
-          Tip: Use Reset View at the bottom if you get lost.
+        <div className="text-white-50 mt-3 pt-2" style={{ fontSize: '12px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+          💡 Tip: Use Reset View at the bottom if you get lost.
         </div>
       </div>
     </div>

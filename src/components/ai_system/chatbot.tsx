@@ -6,23 +6,20 @@ interface ChatbotProps {
 	onSendMessage?: (message: string, file?: File) => void;
 	selectedModel?: string;
 	onModelChange?: (model: string) => void;
+	onMinimize?: () => void;
 }
 
 const formatTime = (d = new Date()) => {
 	return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
 
-const AI_MODELS = [
-	{ id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
-	{ id: 'claude-3.5', name: 'Claude 3.5' },
-	{ id: 'openfoam', name: 'OpenFOAM' },
-	{ id: 'gemini-pro', name: 'Gemini Pro' }
-];
+// Removed AI_MODELS since model selection is handled on backend
 
 const Chatbot: React.FC<ChatbotProps> = ({ 
 	onSendMessage, 
-	selectedModel = AI_MODELS[0].id,
-	onModelChange 
+	selectedModel = 'gpt-4-turbo',
+	onModelChange,
+	onMinimize
 }) => {
 	const [messages, setMessages] = useState<ChatMessage[]>([]);
 	const [input, setInput] = useState('');
@@ -82,7 +79,7 @@ const Chatbot: React.FC<ChatbotProps> = ({
 
 	return (
 		<div className="chat-container d-flex flex-column rounded-3 shadow-lg" style={{ maxHeight: 'calc(100vh - 92px)' }}>
-			{/* Header with AI Model selector */}
+			{/* Header with minimize button */}
 			<div className="d-flex align-items-center justify-content-between p-3 border-bottom border-secondary">
 				<div className="d-flex align-items-center gap-3">
 					<img src="/curfdlogo.png" alt="CURFD" style={{ height: '24px' }} />
@@ -91,18 +88,37 @@ const Chatbot: React.FC<ChatbotProps> = ({
 					</div>
 				</div>
 				
-				<select
-					value={selectedModel}
-					onChange={(e) => onModelChange?.(e.target.value)}
-					className="form-select form-select-sm chat-input rounded-pill px-3"
-					style={{ width: 'auto', backgroundColor: 'rgba(255,255,255,0.1)' }}
-				>
-					{AI_MODELS.map(model => (
-						<option key={model.id} value={model.id}>
-							{model.name}
-						</option>
-					))}
-				</select>
+				{onMinimize && (
+					<button
+						onClick={onMinimize}
+						className="btn btn-sm"
+						style={{
+							background: 'rgba(220, 53, 69, 0.8)',
+							border: '2px solid rgba(220, 53, 69, 0.9)',
+							color: 'white',
+							width: '32px',
+							height: '32px',
+							borderRadius: '50%',
+							padding: '0',
+							display: 'flex',
+							alignItems: 'center',
+							justifyContent: 'center',
+							boxShadow: '0 2px 8px rgba(220, 53, 69, 0.3)',
+							transition: 'all 0.2s ease'
+						}}
+						title="Minimize AI Assistant"
+						onMouseEnter={(e) => {
+							e.currentTarget.style.background = 'rgba(220, 53, 69, 1)';
+							e.currentTarget.style.transform = 'scale(1.1)';
+						}}
+						onMouseLeave={(e) => {
+							e.currentTarget.style.background = 'rgba(220, 53, 69, 0.8)';
+							e.currentTarget.style.transform = 'scale(1)';
+						}}
+					>
+						<i className="fas fa-times" style={{ fontSize: '12px' }}></i>
+					</button>
+				)}
 			</div>
 
 			<div className="flex-grow-1 p-3" style={{ overflowY: 'auto', maxHeight: '60vh' }}>
