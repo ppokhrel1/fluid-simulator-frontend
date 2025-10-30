@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Form, Alert } from 'react-bootstrap';
 
+import { authAPI } from '~/services/auth';
+
 interface AuthModalProps {
   show: boolean;
   onClose: () => void;
@@ -18,6 +20,7 @@ export interface UserData {
 
 interface LoginFormData {
   email: string;
+  username: string;
   password: string;
 }
 
@@ -31,14 +34,32 @@ interface SignupFormData {
   agreeToTerms: boolean;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, initialMode = 'login' }) => {
+// Helper to map backend response to frontend UserData (requires name splitting)
+  const mapBackendUserToFrontend = (user: any): UserData => {
+      // Assuming 'name' field from the backend UserRead schema maps to the full display name
+      const fullName = user.full_name || user.name || '';
+      const parts = fullName.split(' ');
+      const firstName = parts[0] || '';
+      const lastName = parts.slice(1).join(' ') || '';
+
+      return {
+          id: user.id.toString(), // Ensure ID is stringified for frontend
+          email: user.email,
+          firstName: firstName,
+          lastName: lastName,
+          username: user.username,
+      };
+  };
+
+export const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, initialMode = 'login' }) => {
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
   const [loginData, setLoginData] = useState<LoginFormData>({
     email: '',
-    password: ''
+    password: '',
+    username: '',
   });
 
   const [signupData, setSignupData] = useState<SignupFormData>({
@@ -80,22 +101,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, ini
 
     try {
       // Simulate API call - replace with actual authentication logic
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const authResponse = await authAPI.login(loginData.username, loginData.password);
       
-      // Mock successful login
-      const userData: UserData = {
-        id: 'user_' + Date.now(),
-        email: loginData.email,
-        firstName: 'John',
-        lastName: 'Doe',
-        username: loginData.email.split('@')[0]
-      };
+      // Store token (e.g., in localStorage or global state context)
+      localStorage.setItem('authToken', authResponse.access_token);
+
+      const userProfile = await authAPI.getProfile();
+      
+      // Map and send user data to the success handler
+      const userData = mapBackendUserToFrontend(userProfile);
 
       onAuthSuccess(userData);
       onClose();
       
       // Reset form
-      setLoginData({ email: '', password: '' });
+      setLoginData({ username: '', password: '', email:'' });
     } catch (err) {
       setError('Invalid email or password. Please try again.');
     } finally {
@@ -123,18 +143,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, ini
 
     try {
       // Simulate API call - replace with actual registration logic
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock successful signup
-      const userData: UserData = {
-        id: 'user_' + Date.now(),
-        email: signupData.email,
-        firstName: signupData.firstName,
-        lastName: signupData.lastName,
-        username: signupData.username
-      };
+      const fullName = `${signupData.firstName} ${signupData.lastName}`;
 
-      onAuthSuccess(userData);
+      try {
+        // **ACTUAL SIGNUP API CALL**
+        const registerRequest = {
+          username: signupData.username,
+          email: signupData.email,
+          password: signupData.password,
+          name: fullName,
+          full_name: fullName // Map first/last name to full_name
+        }
+        const userProfile = await authAPI.register(registerRequest);
+        const userData = mapBackendUserToFrontend(userProfile);
+        onAuthSuccess(userData);
+      } catch (err: any) {
+        console.error('Registration failed:', err);
+        // Check for specific backend errors (e.g., email/username already registered)
+        setError(err.response?.data?.detail || 'Failed to create account. Email or username may already be taken.');
+      } finally {
+        setIsLoading(false);
+      };
+      
+      
       onClose();
       
       // Reset form
@@ -415,15 +446,15 @@ const AuthModal: React.FC<AuthModalProps> = ({ show, onClose, onAuthSuccess, ini
 
               <Form.Group className="mb-3">
                 <Form.Label style={{ color: '#e0e0e0', fontWeight: '500' }}>
-                  Email Address
+                  User Name
                 </Form.Label>
                 <Form.Control
-                  type="email"
-                  name="email"
-                  value={loginData.email}
+                  type="username"
+                  name="username"
+                  value={loginData.username}
                   onChange={handleLoginChange}
                   required
-                  placeholder="Enter your email"
+                  placeholder="Enter your username"
                   style={inputStyle}
                   className="form-control-lg"
                 />

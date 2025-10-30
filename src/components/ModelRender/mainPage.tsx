@@ -8,7 +8,9 @@ import Chatbot from '../ai_system/chatbot';
 import StorePage, { type StoreItem } from '../Store/StorePage';
 import SellDesignModal, { type SellDesignFormData } from '../ModelRender/SellDesignModal';
 import DashboardModal from '../Auth/DashboardModal';
-import AuthModal, { type UserData } from '../Auth/AuthModal';
+import { type UserData } from '../Auth/AuthModal';
+import { AuthModal } from "/Users/pujan/workspace/fluid-simulator-frontend/src/components/Auth/AuthModal"
+
 import CartModal, { type CartItem } from '../Store/CartModal';
 import BottomControlDock from '../ModelRender/BottomControlDock';
 import PressureLegend from '../ModelRender/PressureLegend';
