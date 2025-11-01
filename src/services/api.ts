@@ -1,5 +1,6 @@
 // services/api.ts
 import axios from 'axios';
+import type { CartItem } from '~/components/Store/CartModal';
 import config from '~/config/constants';
 
 // Use environment variables with REACT_APP_ prefix
@@ -329,6 +330,75 @@ export const labelsAPI = {
     const response = await api.post(`/labels/models/${modelId}/ai-suggestions`);
     return response.data;
   }
+};
+
+
+// Payment System API (NEW - Stripe Integration)
+export const paymentAPI = {
+  // Create payment intent for cart checkout
+  createPaymentIntent: async (cartItems: CartItem[], totalAmount: number) => {
+    //const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    console.log(cartItems, totalAmount,  "cartItems in createPaymentIntent");
+    const response = await api.post('/payments/create-payment-intent', {
+      amount: totalAmount,
+      currency: 'usd',
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: Number(item.price),
+        amount: Number(item.price) * item.quantity,
+        quantity: item.quantity,
+        type: '3d_model'
+      })),
+      purchase_type: 'one_time',
+      metadata: {
+        cart_items: cartItems.map(item => item.id.toString()).join(',')
+      }
+    });
+    return response.data;
+  },
+
+  // Confirm payment
+  confirmPayment: async (paymentIntentId: string, paymentMethodId: string, items: any[]) => {
+    const response = await api.post('/payments/confirm-payment', {
+      payment_intent_id: paymentIntentId,
+      payment_method_id: paymentMethodId,
+      items: items
+    });
+    return response.data;
+  },
+
+  // Get payment status
+  getPaymentStatus: async (paymentIntentId: string) => {
+    const response = await api.get(`/payments/${paymentIntentId}/status`);
+    return response.data;
+  },
+
+  // Create refund
+  createRefund: async (paymentIntentId: string, amount?: number, reason?: string) => {
+    const response = await api.post('/payments/refund', {
+      payment_intent_id: paymentIntentId,
+      amount: amount,
+      reason: reason
+    });
+    return response.data;
+  },
+
+  // Get payment methods
+  getPaymentMethods: async () => {
+    const response = await api.get('/payments/payment-methods');
+    return response.data;
+  },
+
+  createPaymentLink: async (productData: {
+    name: string;
+    price: number;
+    description?: string;
+  }) => {
+    const response = await api.post('/payments/create-payment-link', productData);
+    return response.data;
+  },
+  
 };
 
 export default api;

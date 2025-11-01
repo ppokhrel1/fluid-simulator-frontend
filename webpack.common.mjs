@@ -3,6 +3,11 @@ import CopyWebpackPlugin from "copy-webpack-plugin";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import svgToMiniDataURI from "mini-svg-data-uri";
+// At the top of your Webpack config file:
+import webpack from 'webpack'; // Import the webpack package
+const { DefinePlugin } = webpack; // Destructure DefinePlugin from the import
+
+
 
 export default function () {
     return {
@@ -16,6 +21,23 @@ export default function () {
             hashDigestLength: 10,
         },
         plugins: [
+            new DefinePlugin({
+                'process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY': JSON.stringify(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY),
+                'process.env.REACT_APP_API_URL': JSON.stringify(process.env.REACT_APP_API_URL),
+                
+                // You must also define 'process.env.NODE_ENV' if your app relies on it
+                'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+                
+                // NEW: Define 'process' globally to satisfy runtime checks
+                // This prevents the "Uncaught ReferenceError: process is not defined"
+                process: {
+                    env: {
+                        REACT_APP_STRIPE_PUBLISHABLE_KEY: JSON.stringify(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY),
+                        REACT_APP_API_URL: JSON.stringify(process.env.REACT_APP_API_URL),
+                        // Add other variables here...
+                    }
+                }
+            }),
             new ForkTsCheckerWebpackPlugin({
                 typescript: {
                     configFile: path.resolve("./tsconfig.json"),

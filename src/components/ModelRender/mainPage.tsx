@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import ThreeJSCanvas from '../ModelRender/ThreeJSCanvas';
 import ControlsHint from '../ModelRender/ControlsHint';
@@ -133,14 +133,29 @@ export const MainPageApp: React.FC = () => {
   const threeRef = useRef<ThreeJSActions>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Memoize total calculation
+  const { subtotal, tax, total } = useMemo(() => {
+    const sub = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const t = sub * 0.08;
+    return {
+      subtotal: sub,
+      tax: t,
+      total: sub + t
+    };
+  }, [cartItems]);
 
   // Debug initial state
   console.log('🔍 Initial app state:', {
     hasUploadedFile,
     uploadedFilesCount: appState.uploadedFiles.length,
-    uploadedFiles: appState.uploadedFiles
+    uploadedFiles: appState.uploadedFiles,
+    cartItems: cartItems.length
   });
-
+  
+  // Debug render and total check
+  console.log(`🔄 MainPageApp Render: Total=${total.toFixed(2)}, Subtotal=${subtotal.toFixed(2)}, Items=${cartItems.length}`);
+  
   const updateAppState = (updates: Partial<AppState>) => {
     setAppState(prev => ({ ...prev, ...updates }));
   };
@@ -254,14 +269,6 @@ export const MainPageApp: React.FC = () => {
             updateAppState({ status: 'Previous file detected. Use Upload page to restore file session.' });
             
             // Don't clear the file state - let the upload persistence system handle it
-            // Commented out the auto-clear logic that was interfering
-            // setTimeout(() => {
-            //   updateAppState({ 
-            //     status: `Please re-upload ${fileInfo.name} to continue analysis` 
-            //   });
-            //   setHasUploadedFile(false);
-            //   updateAppState({ uploadedFiles: [] });
-            // }, 2000);
           }
         }
       }
@@ -280,24 +287,6 @@ export const MainPageApp: React.FC = () => {
       console.log('In main view with file info:', fileInfo.name);
       
       // Don't automatically clear files - let the upload persistence system handle restoration
-      // Commented out the auto-clear logic that was interfering with upload persistence
-      // setTimeout(() => {
-      //   if (wasRefreshedInStore) {
-      //     console.log('Was refreshed in store, prompting re-upload');
-      //     setWasRefreshedInStore(false);
-      //     updateAppState({ 
-      //       status: `Session restored. Please re-upload ${fileInfo.name} to continue analysis.` 
-      //     });
-      //     
-      //     setTimeout(() => {
-      //       setHasUploadedFile(false);
-      //       updateAppState({ 
-      //         uploadedFiles: [],
-      //         status: 'Ready for analysis'
-      //       });
-      //     }, 3000);
-      //   }
-      // }, 2000);
     }
   }, [appState.view]);
 
@@ -707,8 +696,9 @@ export const MainPageApp: React.FC = () => {
         const newCartItem: CartItem = {
           id: item.id,
           name: item.name,
-          price: item.price,
-          originalPrice: item.originalPrice,
+          // 🛑 CRITICAL FIX: Ensure price is explicitly cast to a number 
+          price: Number(item.price), 
+          originalPrice: item.originalPrice ? Number(item.originalPrice) : undefined,
           size: item.size || '0 MB',
           color: item.color,
           icon: item.icon,
@@ -743,13 +733,10 @@ export const MainPageApp: React.FC = () => {
       return;
     }
     
-    // Calculate totals
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * 0.08; // 8% tax
-    const total = subtotal + tax;
+    // Note: Totals are now memoized at the component level for stability (subtotal, tax, total)
     
     try {
-      console.log('💳 Initiating Stripe checkout for total:', total);
+      console.log('💳 Initiating Stripe checkout for total:', total.toFixed(2));
       
       // TODO: Replace this with Stripe integration
       // For now, simulate payment processing
@@ -757,34 +744,16 @@ export const MainPageApp: React.FC = () => {
         status: `Processing payment of $${total.toFixed(2)}... (Stripe integration will be added here)`
       });
       
+      const purchase = addPurchase(currentUser!.id.toString(), cartItems, total, subtotal, tax);
+        
+      console.log('Purchase completed:', purchase);
+        
       // Simulate async payment processing
-      setTimeout(() => {
-        // Process the purchase after payment
-        const purchase = addPurchase(currentUser!.id.toString(), cartItems, total, subtotal, tax);
-        
-        console.log('Purchase completed:', purchase);
-        
-        // Clear the cart
-        setCartItems([]);
-        setShowCartModal(false);
-        
-        // Show success message
-        updateAppState({ 
-          status: `✅ Purchase completed! Order #${purchase.id.slice(-8)} for $${total.toFixed(2)}. Click 'Dashboard' to view purchase history.`,
-          view: 'main'
-        });
-      }, 2000); // Simulate payment processing time
+    
       
       // TODO: Stripe integration would look like this:
       /*
-      const stripe = await stripePromise;
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: paymentSession.id,
-      });
-      if (error) {
-        console.error('Stripe checkout error:', error);
-        updateAppState({ status: 'Payment failed. Please try again.' });
-      }
+      // The PaymentModal component handles the createPaymentIntent call itself
       */
     } catch (error: any) {
       console.error('Checkout error:', error);
@@ -811,7 +780,10 @@ export const MainPageApp: React.FC = () => {
     }
     
     // User is logged in, proceed with checkout
-    processCheckout();
+    // NOTE: This processCheckout is the *simulation* code. 
+    // The actual payment modal launch happens inside CartModal.tsx via handleCheckout.
+    // We keep this structure for the simulation logic flow.
+    processCheckout(); 
   };
 
   // Navigate to dashboard
@@ -1318,6 +1290,7 @@ export const MainPageApp: React.FC = () => {
         show={showCartModal}
         onClose={() => setShowCartModal(false)}
         cartItems={cartItems}
+        
         onUpdateQuantity={handleUpdateCartQuantity}
         onRemoveItem={handleRemoveFromCart}
         onCheckout={handleCheckout}

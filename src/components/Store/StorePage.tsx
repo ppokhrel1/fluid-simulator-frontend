@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { commerceAPI } from '../../services/api';
+import { commerceAPI, modelsAPI } from '../../services/api';
 import type { FileData } from '../../types';
 import { type CartItem } from './CartModal';
 
@@ -30,415 +30,82 @@ const StorePage: React.FC<StorePageProps> = ({ onBack, cartItems, onAddToCart, o
   const [storeItems, setStoreItems] = useState<StoreItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Mock store items with seller IDs
-  const allStoreItems: StoreItem[] = [
-    {
-      id: 'item-1',
-      name: 'ARCTIC Liquid Freezer III Pro A-RGB',
-      color: '#4CAF50',
-      icon: 'fas fa-cube',
-      size: '2.5 MB',
-      price: 29.99,
-      originalPrice: 39.99,
-      description: 'High-performance liquid cooling system with RGB lighting',
-      category: 'Cooling Systems',
-      seller: 'TechDesigns Pro',
-      sellerId: 'user_123', // Mock seller ID
-      rating: 4.8,
-      downloads: 247
-    },
-    {
-      id: 'item-2',
-      name: 'Corsair NAUTILUS Water 360mm',
-      color: '#2196F3',
-      icon: 'fas fa-cube',
-      size: '3.1 MB',
-      price: 34.99,
-      originalPrice: 44.99,
-      description: 'Premium all-in-one liquid cooler with advanced pump design',
-      category: 'Cooling Systems',
-      seller: 'CoolTech Studio',
-      sellerId: 'user_456', // Mock seller ID
-      rating: 4.9,
-      downloads: 189
-    },
-    {
-      id: 'item-3',
-      name: 'Thermalright Peerless Assassin',
-      color: '#9C27B0',
-      icon: 'fas fa-cube',
-      size: '1.8 MB',
-      price: 24.99,
-      originalPrice: 29.99,
-      description: 'Dual-tower air cooler with exceptional heat dissipation',
-      category: 'Air Coolers',
-      seller: 'AeroDesign Labs',
-      sellerId: String(user?.id) || 'current_user', // This will be filtered out if user is logged in
-      rating: 4.7,
-      downloads: 312
-    },
-    {
-      id: 'item-4',
-      name: 'AMD Wraith Stealth Socket',
-      color: '#FF5722',
-      icon: 'fas fa-cube',
-      size: '2.2 MB',
-      price: 19.99,
-      originalPrice: 24.99,
-      description: 'Compact and efficient stock cooler design',
-      category: 'CPU Coolers',
-      seller: 'ProcessorParts Inc',
-      sellerId: 'user_789', // Mock seller ID
-      rating: 4.5,
-      downloads: 456
-    },
-    {
-      id: 'item-5',
-      name: 'NZXT Kraken Elite 360mm',
-      color: '#607D8B',
-      icon: 'fas fa-cube',
-      size: '2.7 MB',
-      price: 39.99,
-      originalPrice: 49.99,
-      description: 'Elite-class AIO cooler with customizable LCD display',
-      category: 'Premium Cooling',
-      seller: 'EliteDesigns Co',
-      sellerId: 'user_101', // Mock seller ID
-      rating: 4.9,
-      downloads: 198
-    },
-    {
-      id: 'item-6',
-      name: 'RTX 4080 Gaming GPU',
-      color: '#00C851',
-      icon: 'fas fa-microchip',
-      size: '4.2 MB',
-      price: 89.99,
-      originalPrice: 119.99,
-      description: 'High-performance graphics card model with detailed cooling shroud',
-      category: 'Graphics Cards',
-      seller: 'GraphicsGuru',
-      sellerId: 'user_102',
-      rating: 4.8,
-      downloads: 542
-    },
-    {
-      id: 'item-7',
-      name: 'Intel Core i9-13900K',
-      color: '#0033A0',
-      icon: 'fas fa-microchip',
-      size: '1.9 MB',
-      price: 24.99,
-      originalPrice: 34.99,
-      description: 'Precision-modeled flagship processor with authentic pin layout',
-      category: 'Processors',
-      seller: 'CPUCrafters',
-      sellerId: 'user_103',
-      rating: 4.9,
-      downloads: 678
-    },
-    {
-      id: 'item-8',
-      name: 'Corsair DDR5-6000 RAM Kit',
-      color: '#FFB300',
-      icon: 'fas fa-memory',
-      size: '2.8 MB',
-      price: 32.99,
-      originalPrice: 42.99,
-      description: 'Professional-grade memory module with RGB heat spreaders',
-      category: 'Memory',
-      seller: 'MemoryMasters',
-      sellerId: 'user_104',
-      rating: 4.7,
-      downloads: 389
-    },
-    {
-      id: 'item-9',
-      name: 'ASUS ROG Strix Motherboard',
-      color: '#E91E63',
-      icon: 'fas fa-microchip',
-      size: '5.1 MB',
-      price: 49.99,
-      originalPrice: 69.99,
-      description: 'Feature-rich gaming motherboard with detailed component layout',
-      category: 'Motherboards',
-      seller: 'BoardBuilders Pro',
-      sellerId: 'user_105',
-      rating: 4.8,
-      downloads: 234
-    },
-    {
-      id: 'item-10',
-      name: 'Samsung 980 PRO NVMe SSD',
-      color: '#6C5CE7',
-      icon: 'fas fa-hdd',
-      size: '1.6 MB',
-      price: 19.99,
-      originalPrice: 29.99,
-      description: 'Ultra-fast NVMe storage solution with heat spreader design',
-      category: 'Storage',
-      seller: 'StorageSolutions',
-      sellerId: 'user_106',
-      rating: 4.6,
-      downloads: 445
-    },
-    {
-      id: 'item-11',
-      name: 'Seasonic 850W Modular PSU',
-      color: '#FD7C6E',
-      icon: 'fas fa-plug',
-      size: '3.4 MB',
-      price: 54.99,
-      originalPrice: 74.99,
-      description: '80+ Gold certified power supply with fully modular cables',
-      category: 'Power Supplies',
-      seller: 'PowerTech Studios',
-      sellerId: 'user_107',
-      rating: 4.9,
-      downloads: 167
-    },
-    {
-      id: 'item-12',
-      name: 'Fractal Design Define 7',
-      color: '#2ECC71',
-      icon: 'fas fa-cube',
-      size: '6.8 MB',
-      price: 79.99,
-      originalPrice: 99.99,
-      description: 'Premium PC case with soundproofing and airflow optimization',
-      category: 'PC Cases',
-      seller: 'CaseDesign Elite',
-      sellerId: 'user_108',
-      rating: 4.8,
-      downloads: 298
-    },
-    {
-      id: 'item-13',
-      name: 'Logitech G Pro X Keyboard',
-      color: '#A569BD',
-      icon: 'fas fa-keyboard',
-      size: '2.3 MB',
-      price: 27.99,
-      originalPrice: 37.99,
-      description: 'Professional gaming mechanical keyboard with tactile switches',
-      category: 'Peripherals',
-      seller: 'PeripheralPro',
-      sellerId: 'user_109',
-      rating: 4.7,
-      downloads: 523
-    },
-    {
-      id: 'item-14',
-      name: 'Razer DeathAdder V3 Pro',
-      color: '#00F5FF',
-      icon: 'fas fa-mouse',
-      size: '1.7 MB',
-      price: 22.99,
-      originalPrice: 32.99,
-      description: 'Wireless gaming mouse with Focus Pro sensor and ergonomic design',
-      category: 'Peripherals',
-      seller: 'GamingGear Co',
-      sellerId: 'user_110',
-      rating: 4.8,
-      downloads: 634
-    },
-    {
-      id: 'item-15',
-      name: 'SteelSeries Arctis 7P',
-      color: '#FF6B35',
-      icon: 'fas fa-headphones',
-      size: '3.2 MB',
-      price: 34.99,
-      originalPrice: 49.99,
-      description: 'Wireless gaming headset with lossless 2.4GHz connection',
-      category: 'Audio',
-      seller: 'AudioTech Masters',
-      sellerId: 'user_111',
-      rating: 4.6,
-      downloads: 378
-    },
-    {
-      id: 'item-16',
-      name: 'EVGA GeForce RTX 3070',
-      color: '#76FF03',
-      icon: 'fas fa-microchip',
-      size: '5.4 MB',
-      price: 74.99,
-      originalPrice: 94.99,
-      description: 'High-performance graphics card with ray tracing capabilities',
-      category: 'Graphics Cards',
-      seller: 'GraphicsPro Elite',
-      sellerId: 'user_112',
-      rating: 4.9,
-      downloads: 445
-    },
-    {
-      id: 'item-17',
-      name: 'Cooler Master MasterLiquid',
-      color: '#E040FB',
-      icon: 'fas fa-tint',
-      size: '2.9 MB',
-      price: 42.99,
-      originalPrice: 59.99,
-      description: 'All-in-one liquid cooler with dual chamber pump design',
-      category: 'Cooling Systems',
-      seller: 'CoolingSolutions',
-      sellerId: 'user_113',
-      rating: 4.7,
-      downloads: 267
-    },
-    {
-      id: 'item-18',
-      name: 'G.Skill Trident Z Neo',
-      color: '#FF9800',
-      icon: 'fas fa-memory',
-      size: '2.1 MB',
-      price: 38.99,
-      originalPrice: 49.99,
-      description: 'DDR4 RGB memory kit optimized for AMD Ryzen processors',
-      category: 'Memory',
-      seller: 'MemoryExperts',
-      sellerId: 'user_114',
-      rating: 4.8,
-      downloads: 512
-    },
-    {
-      id: 'item-19',
-      name: 'MSI MAG B550 Tomahawk',
-      color: '#3F51B5',
-      icon: 'fas fa-microchip',
-      size: '4.7 MB',
-      price: 45.99,
-      originalPrice: 64.99,
-      description: 'ATX gaming motherboard with PCIe 4.0 and WiFi 6',
-      category: 'Motherboards',
-      seller: 'MoboTech Pro',
-      sellerId: 'user_115',
-      rating: 4.6,
-      downloads: 298
-    },
-    {
-      id: 'item-20',
-      name: 'WD Black SN850X NVMe',
-      color: '#607D8B',
-      icon: 'fas fa-hdd',
-      size: '1.9 MB',
-      price: 28.99,
-      originalPrice: 39.99,
-      description: 'Ultra-fast PCIe Gen4 NVMe SSD for gaming and content creation',
-      category: 'Storage',
-      seller: 'StorageTech',
-      sellerId: 'user_116',
-      rating: 4.7,
-      downloads: 421
-    },
-    {
-      id: 'item-21',
-      name: 'Corsair RM850x Gold',
-      color: '#FF5722',
-      icon: 'fas fa-plug',
-      size: '3.6 MB',
-      price: 62.99,
-      originalPrice: 79.99,
-      description: 'Fully modular 80+ Gold certified power supply with zero RPM mode',
-      category: 'Power Supplies',
-      seller: 'PowerSolutions Pro',
-      sellerId: 'user_117',
-      rating: 4.9,
-      downloads: 334
-    },
-    {
-      id: 'item-22',
-      name: 'NZXT H5 Elite',
-      color: '#9C27B0',
-      icon: 'fas fa-cube',
-      size: '7.2 MB',
-      price: 69.99,
-      originalPrice: 89.99,
-      description: 'Premium mid-tower case with tempered glass and RGB lighting',
-      category: 'PC Cases',
-      seller: 'CaseDesign Studio',
-      sellerId: 'user_118',
-      rating: 4.8,
-      downloads: 267
-    },
-    {
-      id: 'item-23',
-      name: 'HyperX Cloud Alpha',
-      color: '#E91E63',
-      icon: 'fas fa-headphones',
-      size: '2.8 MB',
-      price: 31.99,
-      originalPrice: 44.99,
-      description: 'Wired gaming headset with dual chamber drivers',
-      category: 'Audio',
-      seller: 'AudioGaming Pro',
-      sellerId: 'user_119',
-      rating: 4.5,
-      downloads: 456
-    },
-    {
-      id: 'item-24',
-      name: 'Elgato Stream Deck',
-      color: '#00BCD4',
-      icon: 'fas fa-keyboard',
-      size: '2.4 MB',
-      price: 44.99,
-      originalPrice: 59.99,
-      description: 'Customizable control surface with LCD keys for content creators',
-      category: 'Streaming',
-      seller: 'StreamTech Elite',
-      sellerId: 'user_120',
-      rating: 4.8,
-      downloads: 289
-    },
-    {
-      id: 'item-25',
-      name: 'Blue Yeti USB Microphone',
-      color: '#4CAF50',
-      icon: 'fas fa-microphone',
-      size: '3.1 MB',
-      price: 39.99,
-      originalPrice: 54.99,
-      description: 'Professional USB condenser microphone for streaming and podcasting',
-      category: 'Audio',
-      seller: 'AudioRecording Co',
-      sellerId: 'user_121',
-      rating: 4.7,
-      downloads: 378
-    }
-  ];
-
   // Filter out current user's listings when browsing store
   useEffect(() => {
     const loadStoreItems = async () => {
       setLoading(true);
       
       try {
-        // Try to fetch from API first
+        // Try to fetch from commerce API first
         const designs = await commerceAPI.designs.getAll();
-        console.log('📦 Fetched designs from API:', designs);
+        console.log('📦 Fetched designs from commerce API:', designs);
+        
+        // Map API response to StoreItem format
+        const mappedDesigns: StoreItem[] = designs.map((design: any) => ({
+          id: design.id || design._id,
+          name: design.name || design.title || 'Untitled Design',
+          color: design.color || '#4CAF50',
+          icon: design.icon || 'fas fa-cube',
+          size: design.size || '2.5 MB',
+          price: design.price || 19.99,
+          originalPrice: design.originalPrice || design.price || 29.99,
+          description: design.description || 'A premium 3D design model',
+          category: design.category || '3D Models',
+          seller: design.seller || design.sellerName || 'Unknown Seller',
+          sellerId: design.sellerId || design.seller_id || design.userId,
+          rating: design.rating || 4.5,
+          downloads: design.downloads || design.downloadCount || 100,
+          preview: design.preview || design.image || design.thumbnail
+        }));
         
         // Filter out current user's own listings
-        const filteredDesigns = designs.filter((design: any) => 
-          design.seller_id !== user?.id && design.seller_id !== String(user?.id)
+        const filteredDesigns = mappedDesigns.filter((design: StoreItem) => 
+          design.sellerId !== user?.id && design.sellerId !== String(user?.id)
         );
         
+        console.log(`🔍 Filtered ${mappedDesigns.length} items to ${filteredDesigns.length} (excluding user's own listings)`);
         setStoreItems(filteredDesigns);
+        
       } catch (error) {
-        console.log('⚠️ API failed, using mock data. Error:', error);
+        console.log('⚠️ Commerce API failed, trying models API. Error:', error);
         
-        // Fallback to mock data, filter out current user's listings
-        const filteredItems = allStoreItems.filter(item => {
-          if (!user) return true; // Show all items if not logged in
+        try {
+          // Fallback to models API
+          const models = await modelsAPI.getAll();
+          console.log('📦 Fetched models from models API:', models);
           
-          // Filter out items where sellerId matches current user's ID
-          return item.sellerId !== String(user.id) && 
-                 item.sellerId !== 'current_user';
-        });
-        
-        console.log(`🔍 Filtered ${allStoreItems.length} items to ${filteredItems.length} (excluding user's own listings)`);
-        setStoreItems(filteredItems);
+          // Map models API response to StoreItem format
+          const mappedModels: StoreItem[] = models.map((model: any) => ({
+            id: model.id || model._id,
+            name: model.name || model.title || 'Untitled Model',
+            color: model.color || '#2196F3',
+            icon: model.icon || 'fas fa-cube',
+            size: model.size || '3.1 MB',
+            price: model.price || 24.99,
+            originalPrice: model.originalPrice || model.price || 34.99,
+            description: model.description || 'A detailed 3D model',
+            category: model.category || '3D Models',
+            seller: model.seller || model.creator || 'Unknown Creator',
+            sellerId: model.sellerId || model.creatorId || model.userId,
+            rating: model.rating || 4.7,
+            downloads: model.downloads || model.downloadCount || 150,
+            preview: model.preview || model.image || model.thumbnail
+          }));
+          
+          // Filter out current user's own listings
+          const filteredModels = mappedModels.filter((model: StoreItem) => 
+            model.sellerId !== user?.id && model.sellerId !== String(user?.id)
+          );
+          
+          console.log(`🔍 Filtered ${mappedModels.length} models to ${filteredModels.length} (excluding user's own listings)`);
+          setStoreItems(filteredModels);
+          
+        } catch (modelsError) {
+          console.log('❌ Both APIs failed, using empty store. Error:', modelsError);
+          
+          // Final fallback - empty array
+          setStoreItems([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -523,7 +190,7 @@ const StorePage: React.FC<StorePageProps> = ({ onBack, cartItems, onAddToCart, o
             ) : (
               <div className="row g-4">
                 {storeItems.map((item, index) => (
-                <div key={index} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+                <div key={item.id || index} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
                   <div 
                     className="card h-100 shadow-lg border-0" 
                     style={{ 
@@ -616,43 +283,49 @@ const StorePage: React.FC<StorePageProps> = ({ onBack, cartItems, onAddToCart, o
                             >
                               ${item.price}
                             </span>
-                            {item.originalPrice && (
+                            {item.originalPrice && item.originalPrice > item.price && (
                               <small className="text-white-50 text-decoration-line-through">
                                 ${item.originalPrice}
                               </small>
                             )}
                           </div>
-                          <small className="text-success fw-semibold">25% OFF Limited Time!</small>
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <small className="text-success fw-semibold">
+                              {Math.round((1 - item.price / item.originalPrice) * 100)}% OFF Limited Time!
+                            </small>
+                          )}
                         </div>
                         
                         <div className="d-flex gap-1 flex-wrap justify-content-center">
                           {/* View Button */}
-                          <button 
-                            className="btn px-2 fw-bold"
-                            onClick={() => onViewItem && onViewItem(item)}
-                            style={{
-                              background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                              border: 'none',
-                              color: 'white',
-                              borderRadius: '20px',
-                              fontSize: '0.7rem',
-                              transition: 'all 0.2s ease',
-                              minWidth: '65px',
-                              height: '32px',
-                              boxShadow: '0 3px 10px rgba(102, 126, 234, 0.3)'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = 'translateY(-2px)';
-                              e.currentTarget.style.boxShadow = '0 5px 15px rgba(102, 126, 234, 0.4)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'translateY(0px)';
-                              e.currentTarget.style.boxShadow = '0 3px 10px rgba(102, 126, 234, 0.3)';
-                            }}
-                          >
-                            <i className="fas fa-eye me-1"></i>
-                            View
-                          </button>
+                          {onViewItem && (
+                            <button 
+                              className="btn px-2 fw-bold"
+                              onClick={() => onViewItem(item)}
+                              style={{
+                                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                                border: 'none',
+                                color: 'white',
+                                borderRadius: '20px',
+                                fontSize: '0.7rem',
+                                transition: 'all 0.2s ease',
+                                minWidth: '65px',
+                                height: '32px',
+                                boxShadow: '0 3px 10px rgba(102, 126, 234, 0.3)'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 5px 15px rgba(102, 126, 234, 0.4)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translateY(0px)';
+                                e.currentTarget.style.boxShadow = '0 3px 10px rgba(102, 126, 234, 0.3)';
+                              }}
+                            >
+                              <i className="fas fa-eye me-1"></i>
+                              View
+                            </button>
+                          )}
 
                           {/* Add to Cart Button */}
                           <button 
@@ -719,9 +392,6 @@ const StorePage: React.FC<StorePageProps> = ({ onBack, cartItems, onAddToCart, o
           </div>
         </div>
       </div>
-
-
-
     </div>
   );
 };
