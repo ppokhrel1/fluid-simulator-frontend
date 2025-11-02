@@ -70,6 +70,11 @@ export const modelsAPI = {
     return response.data;
   },
 
+  update: async (modelId: string, updateData: any) => {
+    const response = await api.put(`/models/${modelId}`, updateData);
+    return response.data;
+  },
+
   // Delete model (admin only)
   delete: async (modelId: number) => {
     const response = await api.delete(`/models/${modelId}`);
@@ -195,6 +200,18 @@ export const commerceAPI = {
       return response.data;
     }
   },
+
+  purchases: {
+    getUserPurchases: async (userId: string | number) => {
+      const response = await api.get(`/purchases/user/${userId}`);
+      return response.data;
+    },
+    
+    downloadItem: async (itemId: string) => {
+      const response = await api.get(`/purchases/download/${itemId}`);
+      return response.data;
+    }
+  },
   
   sales: {
     checkout: async () => {
@@ -202,6 +219,10 @@ export const commerceAPI = {
       return response.data;
     },
     
+    getUserTransactions: async (userId: string | number) => {
+      const response = await api.get(`/commerce/sales/user/${userId}`);
+      return response.data;
+    },
     getPurchases: async () => {
       const response = await api.get('/commerce/sales/purchases');
       return response.data;
