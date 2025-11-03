@@ -14,7 +14,7 @@ export default function () {
         output: {
             path: path.resolve("./dist"),
             filename: "[name].[contenthash].js",
-            publicPath: "/fluid-simulator-frontend/", // <-- your repo name
+            publicPath: "/", // <-- your repo name
             clean: true, // optional: clears old files
         },
         plugins: [
