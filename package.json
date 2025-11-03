@@ -26,7 +26,8 @@
         "clean:dist": "rimraf dist",
         "prepare": "husky",
         "predeploy": "npm run build",
-        "deploy": "gh-pages -d dist"
+        "deploy": "gh-pages -d dist",
+        "vercel-build": "npm run build:production && echo 'Verifying build output:' && find . -name '*.html' -o -name '*.js' | head -10"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^7.1.0",
