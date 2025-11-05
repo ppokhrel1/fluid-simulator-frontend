@@ -37,6 +37,7 @@
         "@react-three/drei": "^10.7.6",
         "@react-three/fiber": "^9.4.0",
         "@stripe/stripe-js": "^8.2.0",
+        "@types/react-dom": "^18.2.0",
         "axios": "^1.12.2",
         "bootstrap": "^5.3.8",
         "react": "^19.0.0",
@@ -45,9 +46,7 @@
         "react-jsx-runtime": "^1.0.0-alpha.1",
         "react-router-dom": "^7.9.4",
         "save-dev": "^0.0.1-security",
-        "@types/react-dom": "^18.2.0",
-        "three": "^0.158.0",
-        "lucide-react": "^0.288.0",
+        "three": "^0.181.0",
         "typescript": "^5.0.0"
     },
     "devDependencies": {
