@@ -45,7 +45,10 @@
         "react-jsx-runtime": "^1.0.0-alpha.1",
         "react-router-dom": "^7.9.4",
         "save-dev": "^0.0.1-security",
-        "three": "^0.180.0"
+        "@types/react-dom": "^18.2.0",
+        "three": "^0.158.0",
+        "lucide-react": "^0.288.0",
+        "typescript": "^5.0.0"
     },
     "devDependencies": {
         "@babel/core": "^7.26.9",
