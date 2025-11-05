@@ -1,9 +1,10 @@
-// hooks/useObjectStudio.ts (CONVERTED TO CONTEXT)
+// hooks/useObjectStudio.ts (FULLY UPDATED WITH MATERIAL SUPPORT)
 import React, { useState, useCallback, useMemo, createContext, useContext } from 'react';
 import { objectStudioAPI } from '~/services/aiAPI';
-import type { MeshData, AIGenerationRequest, PrimitiveShape } from '~/services/aiAPI';
+import type {AIGenerationRequest, PrimitiveShape } from '~/services/aiAPI';
+import type { MeshData } from '~/types/3dshapes';
 
-// --- 1. Define Context Interface ---
+// Define the shape of the context values
 interface ObjectStudioContextType {
   objects: MeshData[];
   selectedObject: string | null;
@@ -15,23 +16,25 @@ interface ObjectStudioContextType {
   exportToSupabase: (meshId: string, format: string) => Promise<string | undefined>;
   updateTransform: (meshId: string, transform: { position: [number, number, number]; rotation: [number, number, number]; scale: [number, number, number]; }) => Promise<void>;
   deleteObject: (meshId: string) => Promise<void>;
+  updateObjectMaterial: (objectId: string, material: any) => void;
 }
 
-// 2. Create the Context Object
+// Create the Context
 const ObjectStudioContext = createContext<ObjectStudioContextType | undefined>(undefined);
 
-// --- 3. Create the Provider Component (Where state lives) ---
+// Create the Provider Component
 export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [objects, setObjects] = useState<MeshData[]>([]);
   const [selectedObject, setSelectedObject] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Create primitive shapes (Logic moved here from the original hook)
+  // Create primitive shapes
   const createPrimitive = useCallback(async (shapeData: PrimitiveShape) => {
     setIsLoading(true);
     try {
       const response = await objectStudioAPI.createPrimitive(shapeData);
       console.log('Primitive creation response:', response, shapeData);
+      
       const newObject: MeshData = {
         id: response.mesh_id,
         type: shapeData.shape_type, 
@@ -40,12 +43,22 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
         position: response.position || [0, 0, 0],
         rotation: [0, 0, 0],
         scale: [1, 1, 1],
-        parameters: shapeData.parameters
+        parameters: shapeData.parameters,
+        material: {
+          color: '#ff6b6b',
+          metalness: 0.2,
+          roughness: 0.6,
+          emissive: '#000000',
+          emissiveIntensity: 0,
+          transparent: false,
+          opacity: 1,
+          wireframe: false
+        }
       };
       
       setObjects(prev => {
         const newArray = [...prev, newObject];
-        console.log('🔄 Objects array updated, new length:', newArray.length);
+        console.log('🔄 Objects array updated (Context), new length:', newArray.length);
         return newArray;
       });
       
@@ -58,7 +71,7 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-  // Update useObjectStudio hook with more detailed logging
+  // AI Shape Generation
   const generateAIShape = useCallback(async (prompt: string, baseMeshId?: string) => {
     setIsLoading(true);
     try {
@@ -78,7 +91,17 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
         position: response.position || [0, 0, 0],
         rotation: [0, 0, 0],
         scale: [1, 1, 1],
-        parameters: { prompt }
+        parameters: { prompt },
+        material: {
+          color: '#ff6b6b',
+          metalness: 0.2,
+          roughness: 0.6,
+          emissive: '#000000',
+          emissiveIntensity: 0,
+          transparent: false,
+          opacity: 1,
+          wireframe: false
+        }
       };
       
       console.log('🆕 3. New object created:', newObject);
@@ -102,7 +125,6 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
-
   // Boolean Operations
   const performBoolean = useCallback(async (operation: string, meshAId: string, meshBId: string) => {
     setIsLoading(true);
@@ -120,8 +142,18 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
         faces: response.faces,
         position: [0, 0, 0],
         rotation: [0, 0, 0],
-        scale: [100, 100, 100],
-        parameters: { operation }
+        scale: [1, 1, 1],
+        parameters: { operation },
+        material: {
+          color: '#ff6b6b',
+          metalness: 0.2,
+          roughness: 0.6,
+          emissive: '#000000',
+          emissiveIntensity: 0,
+          transparent: false,
+          opacity: 1,
+          wireframe: false
+        }
       };
       
       setObjects(prev => [...prev, newObject]);
@@ -186,6 +218,22 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [selectedObject]);
 
+  // Update object material
+  const updateObjectMaterial = useCallback((objectId: string, material: any) => {
+    console.log('🎨 Updating material for:', objectId, material);
+    setObjects(prev => prev.map(obj => 
+      obj.id === objectId 
+        ? { 
+            ...obj, 
+            material: { 
+              ...obj.material, 
+              ...material 
+            } 
+          }
+        : obj
+    ));
+  }, []);
+
   // Memoize the context value
   const contextValue = useMemo(() => ({
     objects,
@@ -197,7 +245,8 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     performBoolean,
     exportToSupabase,
     updateTransform,
-    deleteObject
+    deleteObject,
+    updateObjectMaterial
   }), [
     objects, 
     selectedObject, 
@@ -207,7 +256,8 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     performBoolean, 
     exportToSupabase, 
     updateTransform, 
-    deleteObject
+    deleteObject,
+    updateObjectMaterial
   ]);
 
   return (
@@ -217,8 +267,7 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 };
 
-// --- 4. Create the Custom Hook (The consumer) ---
-// This is the single export that will be used by all components.
+// Create the Custom Hook
 export const useObjectStudio = () => {
   const context = useContext(ObjectStudioContext);
   if (context === undefined) {

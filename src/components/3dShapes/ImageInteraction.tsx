@@ -1,4 +1,4 @@
-// frontend/src/components/3dShapes/ImageInteraction.tsx (Final Version with Temporary Mock)
+// frontend/src/components/3dShapes/ImageInteraction.tsx (Final Version with Material Components)
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, TransformControls } from '@react-three/drei';
@@ -8,17 +8,22 @@ import AIShapeGenerator from './AIShapeGenerator';
 import ExportPanel from './ExportPanel';
 import { useObjectStudio } from '~/hooks/useObjectStudio';
 import SceneObject from './SceneObject';
-import type { MeshData } from '~/services/aiAPI';
 import './ObjectStudio.css';
 import AutoFit from './AutoFit';
 import DebugObject from './DebugObject';
+import type { MeshData } from '~/types/3dshapes';
+import MaterialLibrary from './MaterialLibrary'; // Add this import
+import AdvancedMaterialEditor from './AdvancedMaterialEditor'; // Add this import
 
 const ObjectInteractionApp: React.FC = () => {
-  const [selectedObject, setSelectedObject] = useState<string | null>(null);
+  const { 
+    selectedObject, 
+    setSelectedObject, 
+  } = useObjectStudio();
   const [transformMode, setTransformMode] = useState<'translate' | 'rotate' | 'scale'>('translate');
   const [fitTrigger, setFitTrigger] = useState(0);
   const [debugInfo, setDebugInfo] = useState<string>('Ready');
-  const { objects, exportToSupabase } = useObjectStudio(); // objects is destructured here
+  const { objects, exportToSupabase } = useObjectStudio();
   
   const [selectedMesh, setSelectedMesh] = useState<Mesh | null>(null);
 
@@ -26,14 +31,17 @@ const ObjectInteractionApp: React.FC = () => {
   const mockObjects: MeshData[] = objects.length > 0 ? objects : [{
       id: 'mock-cube',
       type: 'cube',
-      position: [0, 0, 0], // Center it for easy viewing
+      position: [0, 0, 0],
       rotation: [0, 0, 0],
       scale: [1, 1, 1],
-      parameters: { size: 4.0 }
+      parameters: { size: 4.0 },
+      material: { // Add default material for mock object
+        color: '#ff6b6b',
+        metalness: 0.2,
+        roughness: 0.6
+      }
   }] as any;
 
-  
-  // Use the mock array length for fitting logic, or just objects.length
   const objectsToRender = objects.length > 0 ? objects : mockObjects;
   // --- TEMPORARY MOCK LOGIC END ---
 
@@ -45,7 +53,6 @@ const ObjectInteractionApp: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // Check objects.length here, not objectsToRender.length
     if (objects.length > 0) { 
       console.log(`🔄 Objects changed, triggering fit. Count: ${objects.length}`);
       console.log("objects array:", objects);
@@ -60,19 +67,17 @@ const ObjectInteractionApp: React.FC = () => {
     setDebugInfo('Manual fit triggered');
   };
 
-  const handleResetScene = () => {
-    setDebugInfo('Scene reset');
-  };
-  
-  // FINAL DEBUG: Check array length before the map executes
   console.log(`✨ RENDER LOOP CHECK: Objects array length = ${objects.length}`);
-
 
   return (
     <div className="app">
       <div className="sidebar">
         <ShapeLibrary />
         <AIShapeGenerator selectedObjectId={selectedObject} />
+        
+        {/* ADD MATERIAL COMPONENTS HERE */}
+        <MaterialLibrary />
+        <AdvancedMaterialEditor />
         
         <div className="tool-panel">
           <h3>View Controls</h3>
@@ -131,7 +136,6 @@ const ObjectInteractionApp: React.FC = () => {
             setDebugInfo('Canvas ready');
           }}
         >
-          {/* Note: AutoFit should ideally use the *real* objects array for tracking */}
           <AutoFit objects={objects} triggerFit={fitTrigger} /> 
           
           <DebugObject />
@@ -150,7 +154,7 @@ const ObjectInteractionApp: React.FC = () => {
           <gridHelper args={[20, 20, '#666', '#333']} />
           <axesHelper args={[3]} />
           
-          {/* Scene Objects: Now mapping the objectsToRender array */}
+          {/* Scene Objects */}
           {objectsToRender.map((obj: MeshData, index) => {
             console.log(`⚠️ Mapping object ${index}: type=${obj.type}, id=${obj.id}`);
             return (

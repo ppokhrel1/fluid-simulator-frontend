@@ -175,3 +175,271 @@
   color: #cbd5e0;
   font-style: italic;
 }
+
+/* Add to ObjectStudio.css */
+.advanced-material-editor {
+  margin: 20px 0;
+  padding: 15px;
+  background: #4a5568;
+  border-radius: 8px;
+  border: 1px solid #718096;
+}
+
+.advanced-material-editor h4 {
+  margin: 0 0 15px 0;
+  color: #90cdf4;
+  font-size: 1em;
+  border-bottom: 1px solid #718096;
+  padding-bottom: 8px;
+}
+
+/* Preset Section */
+.preset-section {
+  margin-bottom: 15px;
+}
+
+.preset-section label {
+  display: block;
+  margin-bottom: 8px;
+  color: #cbd5e0;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #cbd5e0;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  background: none;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.preset-btn:hover {
+  transform: scale(1.1);
+  border-color: #90cdf4;
+}
+
+.preset-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* Material Controls */
+.material-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.control-group label {
+  color: #cbd5e0;
+  font-size: 0.85em;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.control-group input[type="color"] {
+  width: 100%;
+  height: 30px;
+  border: 1px solid #718096;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #2d3748;
+}
+
+.control-group input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #2d3748;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.control-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4299e1;
+  cursor: pointer;
+}
+
+.control-group input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4299e1;
+  cursor: pointer;
+  border: none;
+}
+
+/* Checkbox Groups */
+.checkbox-group label {
+  flex-direction: row;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-group input[type="checkbox"] {
+  margin-right: 8px;
+  transform: scale(1.2);
+}
+
+/* Preview Section */
+.preview-section {
+  margin: 15px 0;
+  padding: 10px;
+  background: #2d3748;
+  border-radius: 4px;
+}
+
+.preview-section label {
+  display: block;
+  margin-bottom: 8px;
+  color: #cbd5e0;
+  font-size: 0.9em;
+}
+
+.material-preview-3d {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  background: linear-gradient(45deg, #4a5568 25%, #718096 25%, #718096 50%, #4a5568 50%, #4a5568 75%, #718096 75%);
+  background-size: 20px 20px;
+  border-radius: 4px;
+  border: 1px solid #718096;
+}
+
+.preview-cube {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  transform: rotate(45deg);
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.reset-button, .apply-button {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s;
+}
+
+.reset-button {
+  background: #718096;
+  color: white;
+}
+
+.reset-button:hover {
+  background: #90cdf4;
+  color: #2d3748;
+}
+
+.apply-button {
+  background: #48bb78;
+  color: white;
+  font-weight: 500;
+}
+
+.apply-button:hover {
+  background: #68d391;
+}
+
+/* Selected Object Info */
+.selected-object-info {
+  padding: 8px;
+  background: #2d3748;
+  border-radius: 4px;
+  font-size: 0.8em;
+  color: #90cdf4;
+  text-align: center;
+  border: 1px solid #4299e1;
+}
+
+/* Material Hint */
+.material-hint {
+  padding: 15px;
+  background: #2d3748;
+  border-radius: 4px;
+  text-align: center;
+  color: #90cdf4;
+  font-size: 0.9em;
+  border: 1px dashed #718096;
+}
+
+/* Add to your ObjectStudio.css */
+.material-library {
+  padding: 15px;
+  background: #2d3748;
+  border-radius: 8px;
+  margin: 10px 0;
+}
+
+.material-library h4 {
+  margin-bottom: 10px;
+  color: #e2e8f0;
+}
+
+.material-presets {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.material-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.material-preset:hover {
+  background-color: #4a5568;
+}
+
+.material-preview {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  border: 2px solid #718096;
+  margin-bottom: 4px;
+}
+
+.material-preset span {
+  font-size: 0.75rem;
+  color: #cbd5e0;
+  text-align: center;
+}
