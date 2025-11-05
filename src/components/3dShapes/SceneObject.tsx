@@ -37,7 +37,16 @@ const SceneObject: React.FC<SceneObjectProps> = ({
     // Default size for primitives if parameters are missing
     const DEFAULT_UNIT = 1.0; 
     
-    switch (object.type) {
+    // 💡 FIX 1: Determine the base geometry type by stripping 'ai_' or mapping 'boolean'
+    const typeKey = object.type.toLowerCase();
+    let baseType = typeKey;
+    if (typeKey.startsWith('ai_')) {
+        baseType = typeKey.substring(3); // e.g., 'ai_cylinder' -> 'cylinder'
+    } else if (typeKey === 'boolean') {
+        baseType = 'mesh'; // Treat boolean results as raw meshes
+    }
+    
+    switch (baseType) {
       case 'cube':
         const size = object.parameters?.size || 4.0;
         return <boxGeometry args={[size, size, size]} />;
@@ -49,6 +58,7 @@ const SceneObject: React.FC<SceneObjectProps> = ({
       case 'cylinder':
         const cylRadius = object.parameters?.radius || DEFAULT_UNIT;
         const cylHeight = object.parameters?.height || 4.0;
+        // 32 segments is a good default for smooth appearance
         return <cylinderGeometry args={[cylRadius, cylRadius, cylHeight, 32]} />;
         
       case 'cone':
@@ -61,12 +71,12 @@ const SceneObject: React.FC<SceneObjectProps> = ({
         const minorRadius = object.parameters?.minor_radius || 1.0;
         return <torusGeometry args={[majorRadius, minorRadius, 16, 100]} />;
 
-      // Custom/AI-generated Mesh using BufferGeometry
+      // Custom/AI-generated Mesh using BufferGeometry (for raw 'mesh' or 'boolean' results)
       case 'mesh':
-      case 'boolean':
         if (object.vertices && object.faces) {
           const geometry = new BufferGeometry();
           
+          // Vertices and Faces from backend are already flattened arrays of numbers
           const flatVertices = object.vertices.flat();
           const flatIndices = object.faces.flat();
           
@@ -79,8 +89,9 @@ const SceneObject: React.FC<SceneObjectProps> = ({
         // Fallthrough if mesh data is missing
         
       default:
-        console.warn(`Unknown object type or missing parameters for ${object.id}: ${object.type}`);
-        return <boxGeometry args={[1, 1, 1]} />;
+        console.warn(`Unknown object type or missing parameters for ${object.id}: ${object.type}. Falling back to a visible box.`);
+        // Fallback to a visible size box (e.g., 4x4x4) to signal an issue
+        return <boxGeometry args={[4, 4, 4]} />;
     }
   }, [object]); 
 
@@ -90,8 +101,10 @@ const SceneObject: React.FC<SceneObjectProps> = ({
   };
   
   const [x, y, z] = object.position || [0, 0, 0];
-  const SCALING_FACTOR = 4;
-  const scaledPosition = [x * SCALING_FACTOR, y * SCALING_FACTOR, z * SCALING_FACTOR] as [number, number, number];
+  
+  // 💡 FIX 2: REMOVE the SCALING_FACTOR multiplier. 
+  // The position received from the backend is already scaled (e.g., 4x).
+  const scaledPosition = [x, y, z] as [number, number, number];
   
   console.log(`RENDER ${object.type}: Pos=${scaledPosition}`);
   
@@ -99,7 +112,7 @@ const SceneObject: React.FC<SceneObjectProps> = ({
     <mesh
       ref={meshRef}
       onClick={handleClick}
-      position={scaledPosition} 
+      position={scaledPosition} // Use un-scaled position
       rotation={object.rotation}
       scale={object.scale}
       castShadow
