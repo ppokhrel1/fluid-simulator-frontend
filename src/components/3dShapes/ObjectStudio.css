@@ -443,3 +443,85 @@
   color: #cbd5e0;
   text-align: center;
 }
+
+/* Add to ObjectStudio.css */
+.remediation-panel {
+  margin: 20px 0;
+  padding: 15px;
+  background: #4a5568;
+  border-radius: 8px;
+  border: 1px solid #718096;
+}
+
+.remediation-panel h4 {
+  margin: 0 0 15px 0;
+  color: #90cdf4;
+  font-size: 1em;
+  border-bottom: 1px solid #718096;
+  padding-bottom: 8px;
+}
+
+.remediation-hint {
+  padding: 10px;
+  background: #2d3748;
+  border-radius: 4px;
+  text-align: center;
+  color: #90cdf4;
+  font-size: 0.9em;
+  border: 1px dashed #718096;
+  margin-bottom: 15px;
+}
+
+.remediation-panel fieldset {
+  border: 1px solid #718096;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 0;
+}
+
+.remediation-panel legend {
+  color: #cbd5e0;
+  font-size: 0.9em;
+  padding: 0 8px;
+}
+
+.remediation-panel .control-group {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #2d3748;
+  border-radius: 4px;
+}
+
+.remediation-panel .control-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #cbd5e0;
+  font-size: 0.85em;
+}
+
+.remediation-panel .control-tip {
+  font-size: 0.75em;
+  color: #a0aec0;
+  margin: 5px 0 0 0;
+  font-style: italic;
+}
+
+.remediation-panel button {
+  width: 100%;
+  padding: 8px 12px;
+  background: #4299e1;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.remediation-panel button:disabled {
+  background: #718096;
+  cursor: not-allowed;
+}
+
+.remediation-panel button:hover:not(:disabled) {
+  background: #63b3ed;
+}

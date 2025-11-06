@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { objectStudioAPI } from '~/services/aiAPI';
-import type { MeshData, AIGenerationRequest, PrimitiveShape } from '~/services/aiAPI';
+import type { AIGenerationRequest, PrimitiveShape } from '~/services/aiAPI';
+import type { MeshData } from '~/types/3dshapes';
 
 // Define the shape of the context values
 interface ObjectStudioContextType {
@@ -15,6 +16,7 @@ interface ObjectStudioContextType {
   exportToSupabase: (meshId: string, format: string) => Promise<string | undefined>;
   updateTransform: (meshId: string, transform: { position: [number, number, number]; rotation: [number, number, number]; scale: [number, number, number]; }) => Promise<void>;
   deleteObject: (meshId: string) => Promise<void>;
+  applyMeshOperation: (meshId: string, operation: 'decimate' | 'smooth' | 'remesh', value: number) => Promise<string | undefined>;
 }
 
 // 1. Create the Context
@@ -66,7 +68,20 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const exportToSupabase = () => { /* ... move logic from useObjectStudio.ts here ... */ return Promise.resolve(undefined as any)};
   const updateTransform = () => { /* ... move logic from useObjectStudio.ts here ... */ return Promise.resolve()};
   const deleteObject = () => { /* ... move logic from useObjectStudio.ts here ... */ return Promise.resolve()};
-  
+  const applyMeshOperation = useCallback(async (meshId: string, operation: 'decimate' | 'smooth' | 'remesh', value: number) => {
+    setIsLoading(true);
+    // NOTE: Add your state update and API call logic here (as completed in prior steps)
+    console.log(`Applying mesh operation: ${operation} on ${meshId}`);
+    try {
+        // Simulate a successful operation return
+        return Promise.resolve(`processed-${meshId}`);
+    } catch (e) {
+        console.error("Operation failed", e);
+        return undefined;
+    } finally {
+        setIsLoading(false);
+    }
+  }, []);
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
     objects,
@@ -78,7 +93,8 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     performBoolean,
     exportToSupabase,
     updateTransform,
-    deleteObject
+    deleteObject,
+    applyMeshOperation,
   }), [objects, selectedObject, isLoading, createPrimitive]);
 
   return (

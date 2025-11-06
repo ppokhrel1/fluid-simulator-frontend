@@ -14,6 +14,7 @@ import DebugObject from './DebugObject';
 import type { MeshData } from '~/types/3dshapes';
 import MaterialLibrary from './MaterialLibrary'; // Add this import
 import AdvancedMaterialEditor from './AdvancedMaterialEditor'; // Add this import
+import ObjectRemediationPanel from './ObjectRemediationPanel';
 
 const ObjectInteractionApp: React.FC = () => {
   const { 
@@ -177,11 +178,13 @@ const ObjectInteractionApp: React.FC = () => {
           />
         </Canvas>
       </div>
-
+      <div className="sidebar">
+      <ObjectRemediationPanel selectedObjectId={selectedObject} />
       <ExportPanel 
         selectedObject={selectedObject} 
         onExport={exportToSupabase}
       />
+      </div>
     </div>
   );
 };

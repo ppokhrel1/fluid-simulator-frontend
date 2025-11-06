@@ -17,6 +17,7 @@ interface ObjectStudioContextType {
   updateTransform: (meshId: string, transform: { position: [number, number, number]; rotation: [number, number, number]; scale: [number, number, number]; }) => Promise<void>;
   deleteObject: (meshId: string) => Promise<void>;
   updateObjectMaterial: (objectId: string, material: any) => void;
+  applyMeshOperation: (meshId: string, operation: 'decimate' | 'smooth' | 'remesh', value: number) => Promise<string | undefined>;
 }
 
 // Create the Context
@@ -234,6 +235,50 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     ));
   }, []);
 
+  // Update the applyMeshOperation function in useObjectStudio.ts
+  const applyMeshOperation = useCallback(async (meshId: string, operation: 'decimate' | 'smooth' | 'remesh', value: number) => {
+    setIsLoading(true);
+    try {
+      console.log(`🔄 Applying mesh operation: ${operation} on ${meshId} with value: ${value}`);
+      
+      const request = {
+        mesh_id: meshId,
+        operation: operation,
+        parameters: { value },
+        value: value
+      };
+
+      const response = await objectStudioAPI.refineMesh(request);
+      
+      // Update the object in state with new mesh data
+      setObjects(prev => prev.map(obj => 
+        obj.id === meshId 
+          ? { 
+              ...obj, 
+              vertices: response.vertices, 
+              faces: response.faces,
+              parameters: { 
+                ...obj.parameters, 
+                last_operation: operation,
+                original_vertex_count: response.original_vertex_count,
+                new_vertex_count: response.new_vertex_count,
+                original_face_count: response.original_face_count,
+                new_face_count: response.new_face_count
+              }
+            }
+          : obj
+      ));
+
+      console.log(`✅ ${operation} operation completed: ${response.original_face_count} -> ${response.new_face_count} faces`);
+      return response.mesh_id;
+    } catch (error) {
+      console.error(`❌ ${operation} operation failed:`, error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Memoize the context value
   const contextValue = useMemo(() => ({
     objects,
@@ -246,7 +291,8 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     exportToSupabase,
     updateTransform,
     deleteObject,
-    updateObjectMaterial
+    updateObjectMaterial,
+    applyMeshOperation,
   }), [
     objects, 
     selectedObject, 
@@ -257,7 +303,8 @@ export const ObjectStudioProvider: React.FC<{ children: React.ReactNode }> = ({ 
     exportToSupabase, 
     updateTransform, 
     deleteObject,
-    updateObjectMaterial
+    updateObjectMaterial,
+    applyMeshOperation,
   ]);
 
   return (

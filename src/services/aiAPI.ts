@@ -95,6 +95,16 @@ export const objectStudioAPI = {
     return response.data;
   },
 
+  // --- NEW: Mesh Refinement/Remediation Operation ---
+  refineMesh: async (refinementData: {
+    mesh_id: string;
+    operation: 'decimate' | 'smooth' | 'remesh';
+    value: number; // e.g., decimation percentage or smoothing iterations
+  }) => {
+    const response = await api.post('/developer/object-studio/refine', refinementData);
+    return response.data; // Expects { mesh_id, vertices, faces, etc. }
+  },
+
   // Delete mesh
   deleteMesh: async (meshId: string) => {
     const response = await api.delete(`/developer/object-studio/meshes/${meshId}`);
@@ -122,19 +132,7 @@ export const enhancedModelsAPI = {
   }
 };
 
-// ====== TYPES FOR 3D OBJECT STUDIO ======
-export interface MeshData {
-  id: string;
-  type: string;
-  vertices: number[][];
-  faces: number[][];
-  position: [number, number, number];
-  rotation: [number, number, number];
-  scale: [number, number, number];
-  parameters?: any;
-  user_id?: string;
-  created_at?: string;
-}
+
 
 export interface AIGenerationRequest {
   prompt: string;
