@@ -1,0 +1,91 @@
+.home-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.control-panel {
+  background: #f8f9fa;
+}
+
+.file-drop-zone {
+  transition: all 0.3s ease;
+  border-style: dashed !important;
+}
+
+.file-drop-zone:hover {
+  border-color: #007bff !important;
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Custom scrollbar */
+.control-panel ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.control-panel ::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.control-panel ::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.control-panel ::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation for demo buttons */
+.demo-button {
+  transition: all 0.2s ease;
+}
+
+.demo-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Custom range slider */
+.form-range::-webkit-slider-thumb {
+  background: #007bff;
+}
+
+.form-range::-webkit-slider-track {
+  background: #dee2e6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .home-container {
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .control-panel {
+    height: auto !important;
+  }
+}
+
+/* Three.js canvas improvements */
+canvas {
+  outline: none;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.loading-pulse {
+  animation: pulse 2s infinite;
+}

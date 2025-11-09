@@ -15,6 +15,8 @@ import { saveCurrentRoute } from '../../utils/stateUtils';
 import ObjectInteractionApp from '../3dShapes/ImageInteraction';
 // 💡 NEW IMPORT: Import the ObjectStudioProvider from the file you modified
 import { ObjectStudioProvider } from '~/hooks/useObjectStudio'; 
+import { GeometryProvider } from '~/contexts/GeometryContext';
+import GeometryProviderHome from '../simulation_outputs/home';
 
 const AppContent: React.FC = () => {
   const { loading } = useAuth();
@@ -55,7 +57,6 @@ const AppContent: React.FC = () => {
         <Route path="/dashboard" element={<UserDashboard onBack={() => window.history.back()} />} />
         <Route path="/test-backend" element={<ComprehensiveBackendTester />} />
         
-        {/* 💡 FIX: Wrap ObjectInteractionApp with the required Provider */}
         <Route 
           path="/developer" 
           element={
@@ -64,7 +65,12 @@ const AppContent: React.FC = () => {
             </ObjectStudioProvider>
           } 
         />
+
         
+        <Route path="/simulations" element={<GeometryProvider>
+          <GeometryProviderHome />
+          </GeometryProvider>} />
+
         {/* <Route path="/contact" element={<Contact />} /> */}
         {/* You can also add a catch-all route for 404 pages */}
         {/* <Route path="*" element={<NotFound />} /> */}
