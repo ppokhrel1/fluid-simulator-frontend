@@ -6,6 +6,7 @@ import ControlPanel from './ControlPanel';
 import GeometryViewer from './GeometryViewer';
 import FlowVisualization from './FlowVisualization';
 import './home.css';
+import config from '~/config/constants';
 
 interface SimulationData {
   geometry: any;
@@ -45,7 +46,7 @@ const GeometryProviderHome: React.FC = () => {
       formData.append('direction_z', flowConditions.direction[2].toString());
       formData.append('resolution', flowConditions.resolution.toString());
 
-      const response = await fetch('/api/simulations/simulate-flow', {
+      const response = await fetch(config.apiUrl + '/api/simulations/simulate-flow', {
         method: 'POST',
         body: formData,
       });
@@ -91,7 +92,7 @@ const GeometryProviderHome: React.FC = () => {
         });
       }, 300);
 
-      const response = await fetch('/api/v1/simulations/quick-demo', {
+      const response = await fetch(config.apiUrl +'/api/v1/simulations/quick-demo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',

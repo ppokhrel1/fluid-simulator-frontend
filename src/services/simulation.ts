@@ -1,8 +1,8 @@
 import config from '~/config/constants';
 import type { SimulationResponse } from '../types/geometry';
 
-const API_BASE = config.apiUrl + 'api/v1';
-
+const API_BASE = `${config.apiUrl.replace(/\/$/, '')}/api/v1`;
+console.log(API_BASE)
 class SimulationAPI {
   async simulateFlow(
     file: File,
