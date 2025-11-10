@@ -5,7 +5,7 @@ export const randomDefaults = {
 
 // config.ts
 const config = {
-    apiUrl: "http://localhost:10000", // 'https://goldfish-app-pg2bo.ondigitalocean.app'
+    apiUrl: 'https://goldfish-app-pg2bo.ondigitalocean.app',
     googleOAuthUrl: process.env.GOOGLE_OAUTH_URL || "https://goldfish-app-pg2bo.ondigitalocean.app/auth/google",
 };
 
