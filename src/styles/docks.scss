@@ -1,0 +1,79 @@
+.dock-overlay {
+  position: fixed;
+  transition: all 0.3s ease;
+  background: rgba(33, 37, 41, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 1030;
+  height: 100vh;
+}
+
+.left-dock {
+  left: 0;
+  width: 60px;
+  
+  &:hover {
+    width: 240px;
+  }
+
+  .dock-content {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    width: 200px;
+  }
+
+  &:hover .dock-content {
+    opacity: 1;
+  }
+}
+
+.right-dock {
+  right: 0;
+  width: 60px;
+  
+  &:hover {
+    width: 320px;
+  }
+
+  .dock-content {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    width: 280px;
+  }
+
+  &:hover .dock-content {
+    opacity: 1;
+  }
+}
+
+.dock-trigger {
+  width: 60px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  border-right: 1px solid var(--bs-secondary);
+}
+
+.right-dock .dock-trigger {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--bs-secondary);
+}
+
+// Animate typing dots
+@keyframes typing-dot {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+.typing-dot {
+  animation: typing-dot 1s infinite;
+  
+  &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.4s; }
+}

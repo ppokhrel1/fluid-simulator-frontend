@@ -1,0 +1,387 @@
+{
+    "authentication": {
+        "user_schema": {
+            "id": "number",
+            "email": "string",
+            "full_name": "string",
+            "is_superuser": "boolean",
+            "is_active": "boolean"
+        },
+        "login_request": {
+            "username": "string",
+            "password": "string",
+            "grant_type": "string (optional)"
+        },
+        "registration_request": {
+            "username": "string",
+            "email": "string",
+            "password": "string",
+            "full_name": "string"
+        },
+        "auth_response": {
+            "access_token": "string",
+            "token_type": "string"
+        }
+    },
+    "model_management": {
+        "uploaded_model_schema": {
+            "id": "number",
+            "name": "string",
+            "file_name": "string",
+            "file_size": "string",
+            "file_type": "string",
+            "description": "string (optional)",
+            "web_link": "string (optional)",
+            "tags": "string[]",
+            "thumbnail": "string (optional)",
+            "project_name": "string (optional)",
+            "designer": "string (optional)",
+            "revision": "string (optional)",
+            "units": "string",
+            "scale_factor": "number",
+            "fluid_density": "number",
+            "fluid_viscosity": "number",
+            "velocity_inlet": "number (optional)",
+            "temperature_inlet": "number (optional)",
+            "pressure_outlet": "number (optional)",
+            "analysis_status": "string",
+            "last_opened": "string (optional)",
+            "created_at": "string",
+            "updated_at": "string",
+            "created_by_user_id": "number"
+        },
+        "upload_form_data": {
+            "file": "File",
+            "name": "string",
+            "description": "string",
+            "tags": "string (JSON array)",
+            "project_name": "string",
+            "designer": "string",
+            "revision": "string",
+            "units": "string (meters|millimeters|inches|feet)",
+            "scale_factor": "string",
+            "components": "string (JSON array)"
+        },
+        "component_schema": {
+            "id": "number",
+            "model_id": "number",
+            "name": "string",
+            "component_type": "string",
+            "material": "string (optional)",
+            "color": "string (optional)",
+            "dimensions": "string (optional)",
+            "properties": "object (flexible)",
+            "created_at": "string"
+        }
+    },
+    "commerce_system": {
+        "design_asset_schema": {
+            "id": "string",
+            "name": "string",
+            "description": "string",
+            "price": "number",
+            "category": "string",
+            "status": "string (active|draft|sold|paused)",
+            "sales": "number",
+            "revenue": "number",
+            "uploadDate": "string",
+            "lastModified": "string",
+            "views": "number",
+            "likes": "number",
+            "seller_id": "number",
+            "original_model_id": "number (optional)"
+        },
+        "sell_design_form": {
+            "designName": "string",
+            "description": "string",
+            "price": "string",
+            "category": "string (aerospace|automotive|mechanical|architecture|industrial|other)",
+            "fileOrigin": "string (original|modified|commissioned)",
+            "licenseType": "string (commercial|personal|attribution|non-commercial)",
+            "originDeclaration": "boolean",
+            "qualityAssurance": "boolean",
+            "technicalSpecs": "string",
+            "tags": "string",
+            "instructions": "string"
+        },
+        "sales_transaction_schema": {
+            "id": "string",
+            "design_id": "string",
+            "design_name": "string",
+            "buyer_id": "number",
+            "buyer_email": "string",
+            "price": "number",
+            "date": "string",
+            "status": "string (completed|pending|refunded)",
+            "transaction_id": "string (optional)",
+            "commission_rate": "number",
+            "seller_earnings": "number"
+        },
+        "cart_item_schema": {
+            "id": "string",
+            "user_id": "number",
+            "design_id": "string",
+            "name": "string",
+            "price": "number",
+            "originalPrice": "number (optional)",
+            "size": "string",
+            "color": "string",
+            "icon": "string",
+            "quantity": "number",
+            "added_at": "string"
+        },
+        "payout_schema": {
+            "id": "string",
+            "seller_id": "number",
+            "amount": "number",
+            "status": "string (pending|processing|completed|failed)",
+            "request_date": "string",
+            "processed_date": "string (optional)",
+            "method": "string",
+            "fees": "number",
+            "net_amount": "number",
+            "payout_account": "string (optional)"
+        }
+    },
+    "ai_chatbot_system": {
+        "chat_message_schema": {
+            "type": "string (user|ai)",
+            "content": "string",
+            "time": "string",
+            "file": "object (optional)"
+        },
+        "file_data_schema": {
+            "name": "string",
+            "color": "string",
+            "icon": "string",
+            "size": "string (optional)",
+            "file": "File (optional)"
+        },
+        "ai_message_schema": {
+            "role": "string (user|assistant|system)",
+            "content": "string"
+        },
+        "ai_adapter_options": {
+            "apiUrl": "string (optional)",
+            "apiKey": "string (optional)",
+            "model": "string (optional)"
+        },
+        "chat_session_schema": {
+            "id": "string",
+            "user_id": "number",
+            "model_id": "number (optional)",
+            "created_at": "string",
+            "updated_at": "string"
+        },
+        "chat_history_schema": {
+            "id": "string",
+            "session_id": "string",
+            "message_type": "string (user|ai)",
+            "content": "string",
+            "file_name": "string (optional)",
+            "file_data": "string (optional)",
+            "timestamp": "string"
+        }
+    },
+    "labeling_system": {
+        "asset_label_schema": {
+            "id": "string",
+            "model_id": "number",
+            "position": "number[] (3D coordinates [x, y, z])",
+            "text": "string",
+            "category": "string (Material|Part|Function|Texture|Dimension|Other)",
+            "created_by": "number",
+            "created_at": "string",
+            "updated_at": "string"
+        },
+        "ai_suggestion_schema": {
+            "text": "string",
+            "category": "string",
+            "confidence": "number (optional, 0-1)"
+        }
+    },
+    "analysis_system": {
+        "analysis_result_schema": {
+            "id": "number",
+            "component_id": "number",
+            "analysis_type": "string",
+            "result_data": "object (flexible JSON)",
+            "status": "string",
+            "created_at": "string",
+            "completed_at": "string (optional)",
+            "error_message": "string (optional)"
+        }
+    },
+    "api_endpoints": {
+        "authentication": ["POST /login", "POST /auth/user", "GET /user/me/", "POST /auth/logout"],
+        "model_management": [
+            "POST /upload",
+            "GET /models/?limit={limit}&offset={offset}",
+            "GET /models/{modelId}",
+            "GET /models/{modelId}/download",
+            "PUT /models/{modelId}/status",
+            "DELETE /models/{modelId}",
+            "POST /models/{modelId}/components",
+            "GET /models/{modelId}/components",
+            "PUT /components/{componentId}"
+        ],
+        "analysis": ["POST /analysis/results", "GET /components/{componentId}/analysis"],
+        "commerce": [
+            "POST /designs",
+            "GET /designs?category={cat}&limit={limit}&offset={offset}",
+            "GET /designs/{designId}",
+            "POST /cart/add",
+            "GET /cart",
+            "PUT /cart/{itemId}",
+            "DELETE /cart/{itemId}",
+            "POST /checkout",
+            "GET /sales/history",
+            "POST /payouts/request",
+            "GET /payouts/history"
+        ],
+        "labeling": [
+            "POST /models/{modelId}/labels",
+            "GET /models/{modelId}/labels",
+            "PUT /labels/{labelId}",
+            "DELETE /labels/{labelId}",
+            "POST /models/{modelId}/ai-suggestions"
+        ],
+        "chat": [
+            "POST /chat/sessions",
+            "GET /chat/sessions",
+            "POST /chat/sessions/{sessionId}/messages",
+            "GET /chat/sessions/{sessionId}/messages"
+        ]
+    },
+    "database_tables": {
+        "users": {
+            "id": "SERIAL PRIMARY KEY",
+            "email": "VARCHAR(255) UNIQUE NOT NULL",
+            "username": "VARCHAR(100) UNIQUE NOT NULL",
+            "full_name": "VARCHAR(255) NOT NULL",
+            "password_hash": "VARCHAR(255) NOT NULL",
+            "is_superuser": "BOOLEAN DEFAULT FALSE",
+            "is_active": "BOOLEAN DEFAULT TRUE",
+            "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        },
+        "uploaded_models": {
+            "id": "SERIAL PRIMARY KEY",
+            "name": "VARCHAR(255) NOT NULL",
+            "file_name": "VARCHAR(255) NOT NULL",
+            "file_path": "VARCHAR(500) NOT NULL",
+            "file_size": "VARCHAR(50)",
+            "file_type": "VARCHAR(100)",
+            "description": "TEXT",
+            "web_link": "VARCHAR(500)",
+            "tags": "JSONB DEFAULT '[]'",
+            "thumbnail": "VARCHAR(500)",
+            "project_name": "VARCHAR(255)",
+            "designer": "VARCHAR(255)",
+            "revision": "VARCHAR(100)",
+            "units": "VARCHAR(50) DEFAULT 'meters'",
+            "scale_factor": "DECIMAL(5,2) DEFAULT 1.0",
+            "fluid_density": "DECIMAL(10,4)",
+            "fluid_viscosity": "DECIMAL(10,6)",
+            "velocity_inlet": "DECIMAL(10,4)",
+            "temperature_inlet": "DECIMAL(10,4)",
+            "pressure_outlet": "DECIMAL(10,4)",
+            "analysis_status": "VARCHAR(50) DEFAULT 'pending'",
+            "last_opened": "TIMESTAMP",
+            "created_by_user_id": "INTEGER REFERENCES users(id)",
+            "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        },
+        "components": {
+            "id": "SERIAL PRIMARY KEY",
+            "model_id": "INTEGER REFERENCES uploaded_models(id) ON DELETE CASCADE",
+            "name": "VARCHAR(255) NOT NULL",
+            "component_type": "VARCHAR(100)",
+            "material": "VARCHAR(255)",
+            "color": "VARCHAR(50)",
+            "dimensions": "VARCHAR(255)",
+            "properties": "JSONB DEFAULT '{}'",
+            "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        },
+        "analysis_results": {
+            "id": "SERIAL PRIMARY KEY",
+            "component_id": "INTEGER REFERENCES components(id) ON DELETE CASCADE",
+            "analysis_type": "VARCHAR(100) NOT NULL",
+            "result_data": "JSONB NOT NULL",
+            "status": "VARCHAR(50) DEFAULT 'pending'",
+            "error_message": "TEXT",
+            "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            "completed_at": "TIMESTAMP"
+        },
+        "design_assets": {
+            "id": "UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+            "name": "VARCHAR(255) NOT NULL",
+            "description": "TEXT",
+            "price": "DECIMAL(10,2) NOT NULL",
+            "category": "VARCHAR(100)",
+            "status": "VARCHAR(50) DEFAULT 'draft'",
+            "sales": "INTEGER DEFAULT 0",
+            "revenue": "DECIMAL(15,2) DEFAULT 0",
+            "views": "INTEGER DEFAULT 0",
+            "likes": "INTEGER DEFAULT 0",
+            "seller_id": "INTEGER REFERENCES users(id)",
+            "original_model_id": "INTEGER REFERENCES uploaded_models(id)",
+            "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        },
+        "asset_labels": {
+            "id": "UUID PRIMARY KEY DEFAULT gen_random_uuid()",
+            "model_id": "INTEGER REFERENCES uploaded_models(id) ON DELETE CASCADE",
+            "position_x": "DECIMAL(10,6)",
+            "position_y": "DECIMAL(10,6)",
+            "position_z": "DECIMAL(10,6)",
+            "text": "VARCHAR(255) NOT NULL",
+            "category": "VARCHAR(100)",
+            "created_by": "INTEGER REFERENCES users(id)",
+            "created_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            "updated_at": "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        }
+    },
+    "supported_file_types": {
+        "3d_models": [".stl", ".obj", ".glb", ".gltf", ".step", ".stp"],
+        "thumbnails": [".jpg", ".png", ".webp"],
+        "analysis_results": ["various formats depending on analysis type"]
+    },
+    "ai_models_supported": [
+        {
+            "id": "gpt-4-turbo",
+            "name": "GPT-4 Turbo",
+            "provider": "OpenAI"
+        },
+        {
+            "id": "claude-3.5",
+            "name": "Claude 3.5",
+            "provider": "Anthropic"
+        },
+        {
+            "id": "gemini-pro",
+            "name": "Gemini Pro",
+            "provider": "Google"
+        },
+        {
+            "id": "openfoam",
+            "name": "OpenFOAM",
+            "provider": "Custom Integration"
+        }
+    ],
+    "label_categories": ["Material", "Part", "Function", "Texture", "Dimension", "Other"],
+    "design_categories": ["aerospace", "automotive", "mechanical", "architecture", "industrial", "other"],
+    "license_types": ["commercial", "personal", "attribution", "non-commercial"],
+    "file_origins": ["original", "modified", "commissioned"],
+    "units_supported": ["meters", "millimeters", "inches", "feet"],
+    "analysis_statuses": ["pending", "running", "completed", "failed"],
+    "payment_statuses": ["completed", "pending", "refunded"],
+    "payout_statuses": ["pending", "processing", "completed", "failed"],
+    "environment_variables": {
+        "database": ["DATABASE_URL"],
+        "authentication": ["JWT_SECRET_KEY", "JWT_ACCESS_TOKEN_EXPIRE_MINUTES"],
+        "file_storage": ["UPLOAD_PATH", "MAX_UPLOAD_SIZE"],
+        "ai_integration": ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY"],
+        "cloud_storage": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "S3_BUCKET_NAME"]
+    }
+}
