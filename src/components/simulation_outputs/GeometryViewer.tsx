@@ -13,7 +13,7 @@ interface GeometryViewerProps {
 
 const GeometryViewer: React.FC<GeometryViewerProps> = ({ 
   geometry, 
-  color = "#4F8DFF",
+  color = "#8A4FFF",
   opacity = 0.85
 }) => {
   const { bufferGeometry, hasValidData } = useMemo(() => {

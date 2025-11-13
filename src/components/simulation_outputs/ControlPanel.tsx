@@ -59,25 +59,25 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       id: 'airfoil', 
       name: 'Airfoil', 
       description: 'NACA 0012 airfoil',
-      icon: '✈️'
+      icon: 'fa-plane'
     },
     { 
       id: 'sphere', 
       name: 'Sphere', 
       description: 'Simple sphere',
-      icon: '🔵'
+      icon: 'fa-circle'
     },
     { 
       id: 'cylinder', 
       name: 'Cylinder', 
       description: 'Circular cylinder',
-      icon: '📦'
+      icon: 'fa-cube'
     },
     { 
       id: 'cube', 
       name: 'Cube', 
       description: 'Rectangular box',
-      icon: '🧊'
+      icon: 'fa-square'
     }
   ];
 
@@ -93,7 +93,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     }
     return (
       <>
-        <i className="bi bi-play-circle me-2"></i>
+        <i className="fas fa-play-circle me-2"></i>
         Run Flow Simulation
       </>
     );
@@ -103,7 +103,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     <Card className="control-panel h-100 border-0 shadow-lg">
       <Card.Header className="bg-gradient-primary text-white border-0">
         <div className="d-flex align-items-center">
-          <i className="bi bi-wind fs-3 me-2"></i>
+          <i className="fas fa-wind fs-3 me-2"></i>
           <div>
             <h4 className="mb-0 fw-bold">FlowViz CFD</h4>
             <small className="opacity-75">Real-time Computational Fluid Dynamics</small>
@@ -136,7 +136,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               onClick={() => setActiveTab('demo')}
               className="text-center"
             >
-              <i className="bi bi-lightning-charge me-1"></i>
+              <i className="fas fa-bolt me-1"></i>
               Quick Demo
             </Nav.Link>
           </Nav.Item>
@@ -146,7 +146,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
               onClick={() => setActiveTab('upload')}
               className="text-center"
             >
-              <i className="bi bi-cloud-upload me-1"></i>
+              <i className="fas fa-cloud-upload-alt me-1"></i>
               Upload
             </Nav.Link>
           </Nav.Item>
@@ -156,7 +156,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <Card className="mb-3 border-light shadow-sm">
           <Card.Header className="bg-light py-2">
             <h6 className="mb-0 fw-semibold">
-              <i className="bi bi-sliders2 me-2"></i>
+              <i className="fas fa-sliders-h me-2"></i>
               Flow Conditions
             </h6>
           </Card.Header>
@@ -220,7 +220,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                 
                 {selectedFile ? (
                   <div className="text-success">
-                    <i className="bi bi-file-earmark-check fs-1"></i>
+                    <i className="fas fa-file-check fs-1"></i>
                     <div className="mt-2">
                       <div className="fw-bold">{selectedFile.name}</div>
                       <small className="text-muted">
@@ -230,7 +230,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                   </div>
                 ) : (
                   <div>
-                    <i className="bi bi-cloud-arrow-up fs-1 text-muted"></i>
+                    <i className="fas fa-cloud-upload-alt fs-1 text-muted"></i>
                     <p className="mb-1 fw-semibold">Click to upload geometry</p>
                     <small className="text-muted">
                       STL, GLB, OBJ • Max 50MB
@@ -252,7 +252,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
           <Card className="border-light shadow-sm">
             <Card.Header className="bg-light py-2">
               <h6 className="mb-0 fw-semibold">
-                <i className="bi bi-collection me-2"></i>
+                <i className="fas fa-th-large me-2"></i>
                 Demo Geometries
               </h6>
             </Card.Header>
@@ -265,7 +265,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
                       disabled={isLoading}
                       className="btn btn-outline-primary w-100 h-100 py-3"
                     >
-                      <div className="fs-4 mb-1">{geom.icon}</div>
+                      <div className="fs-4 mb-1">
+                        <i className={`fas ${geom.icon}`}></i>
+                      </div>
                       <div className="fw-semibold">{geom.name}</div>
                       <small className="text-muted d-block">{geom.description}</small>
                     </button>
@@ -280,7 +282,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <Card className="mt-3 border-light shadow-sm">
           <Card.Header className="bg-light py-2">
             <h6 className="mb-0 fw-semibold">
-              <i className="bi bi-eye me-2"></i>
+              <i className="fas fa-eye me-2"></i>
               Visualization
             </h6>
           </Card.Header>
@@ -304,7 +306,7 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
         <Card className="mt-3 border-info bg-info bg-opacity-10">
           <Card.Body className="py-2">
             <div className="d-flex align-items-center">
-              <i className="bi bi-info-circle text-info me-2"></i>
+              <i className="fas fa-info-circle text-info me-2"></i>
               <small className="text-muted">
                 Flow direction: +X • Turbulence model: Laminar
               </small>
