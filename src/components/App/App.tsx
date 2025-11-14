@@ -17,6 +17,7 @@ import ObjectInteractionApp from '../3dShapes/ImageInteraction';
 import { ObjectStudioProvider } from '~/hooks/useObjectStudio'; 
 import { GeometryProvider } from '~/contexts/GeometryContext';
 import GeometryProviderHome from '../simulation_outputs/home';
+import LandingPage from '../Landing';
 
 const AppContent: React.FC = () => {
   const { loading } = useAuth();
@@ -70,6 +71,8 @@ const AppContent: React.FC = () => {
         <Route path="/simulations" element={<GeometryProvider>
           <GeometryProviderHome />
           </GeometryProvider>} />
+
+        <Route path="/landing" element={<LandingPage />} />
 
         {/* <Route path="/contact" element={<Contact />} /> */}
         {/* You can also add a catch-all route for 404 pages */}
