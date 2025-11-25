@@ -6,6 +6,9 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import type { ThreeJSActions, AppState } from '../../types';
 import { Canvas, useThree } from '@react-three/fiber';
+import { LoaderUtils } from 'three';
+import { XacroLoader } from 'xacro-parser';
+import URDFLoader from 'urdf-loader';
 
 interface ThreeJSCanvasProps {
   onStateUpdate: (updates: Partial<AppState>) => void;
@@ -291,6 +294,7 @@ const Scene: React.FC<{
             loadedModel = gltf.scene;
             break;
 
+          
           default:
             throw new Error(`Unsupported file format: ${fileExtension}`);
         }

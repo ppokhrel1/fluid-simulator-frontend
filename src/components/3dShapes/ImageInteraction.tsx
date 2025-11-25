@@ -1,8 +1,7 @@
-// frontend/src/components/3dShapes/ImageInteraction.tsx (Final Version with Material Components)
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, TransformControls } from '@react-three/drei';
-import type { Mesh } from 'three';
+import * as THREE from 'three'; // Import all of three to use Group and Object3D
 import ShapeLibrary from './ShapeLibrary';
 import AIShapeGenerator from './AIShapeGenerator';
 import ExportPanel from './ExportPanel';
@@ -16,6 +15,10 @@ import MaterialLibrary from './MaterialLibrary'; // Add this import
 import AdvancedMaterialEditor from './AdvancedMaterialEditor'; // Add this import
 import ObjectRemediationPanel from './ObjectRemediationPanel';
 
+// Define a type for selectable 3D objects (Mesh, Group, or base Object3D)
+type SelectableObject = THREE.Mesh | THREE.Group | THREE.Object3D;
+
+
 const ObjectInteractionApp: React.FC = () => {
   const { 
     selectedObject, 
@@ -26,7 +29,8 @@ const ObjectInteractionApp: React.FC = () => {
   const [debugInfo, setDebugInfo] = useState<string>('Ready');
   const { objects, exportToSupabase } = useObjectStudio();
   
-  const [selectedMesh, setSelectedMesh] = useState<Mesh | null>(null);
+  // FIX: Change selectedMesh state to accept the broader SelectableObject type
+  const [selectedMesh, setSelectedMesh] = useState<SelectableObject | null>(null);
   
   // Panel visibility states
   const [openPanel, setOpenPanel] = useState<string | null>(null);
@@ -51,7 +55,8 @@ const ObjectInteractionApp: React.FC = () => {
   const objectsToRender = objects.length > 0 ? objects : mockObjects;
   // --- TEMPORARY MOCK LOGIC END ---
 
-  const handleObjectSelect = useCallback((objectId: string, mesh: Mesh | null) => {
+  // FIX: Update the mesh parameter type to match the SceneObject's onSelect signature.
+  const handleObjectSelect = useCallback((objectId: string, mesh: SelectableObject | null) => {
     console.log(`🎯 Object selected: ${objectId}`, { meshExists: !!mesh });
     setSelectedObject(objectId);
     setSelectedMesh(mesh);
@@ -200,7 +205,6 @@ const ObjectInteractionApp: React.FC = () => {
           
           {/* Scene Objects */}
           {objectsToRender.map((obj: MeshData, index) => {
-            console.log(`⚠️ Mapping object ${index}: type=${obj.type}, id=${obj.id}`);
             return (
               <SceneObject
                 key={obj.id}

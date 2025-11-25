@@ -17,6 +17,7 @@ import ObjectInteractionApp from '../3dShapes/ImageInteraction';
 import { ObjectStudioProvider } from '~/hooks/useObjectStudio'; 
 import { GeometryProvider } from '~/contexts/GeometryContext';
 import GeometryProviderHome from '../simulation_outputs/home';
+import Simple3DViewer from '../robotics_loader/Simple3dViewer';
 
 const AppContent: React.FC = () => {
   const { loading } = useAuth();
@@ -66,7 +67,7 @@ const AppContent: React.FC = () => {
           } 
         />
 
-        
+        <Route path="/3d-viewer" element={<Simple3DViewer/>} />
         <Route path="/simulations" element={<GeometryProvider>
           <GeometryProviderHome />
           </GeometryProvider>} />

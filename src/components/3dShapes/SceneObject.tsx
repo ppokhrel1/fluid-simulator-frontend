@@ -1,13 +1,37 @@
-// frontend/src/components/3dShapes/SceneObject.tsx
-import React, { useRef, useMemo, useEffect } from 'react';
-import { Mesh, BufferGeometry, BufferAttribute } from 'three';
+import React, { useRef, useMemo, useEffect, useState } from 'react';
+import * as THREE from 'three';
+import { Mesh, BufferGeometry, BufferAttribute, Group, Object3D } from 'three';
 import { TransformControls } from '@react-three/drei';
 import type { MeshData } from '~/types/3dshapes';
+import { LoaderUtils } from 'three';
+import { XacroLoader } from 'xacro-parser';
+import URDFLoader from 'urdf-loader';
+
+// --- Helper Functions ---
+// Utility to get the path to the main XACRO file.
+// Assuming the user wants to load the uploaded file: 'Mars Exploration Rover.urdf.xacro'
+const getUrdfUrl = (object: MeshData): string | null => {
+    // You might define the URL in object.parameters, e.g., parameters: { url: 'robot.xacro' }
+    const fileFromParams = object.parameters?.url as string;
+
+    if (fileFromParams) {
+        return fileFromParams;
+    }
+    // Fallback to the known uploaded file name if this component's data points to a URDF type
+    if (object.type.toLowerCase() === 'urdf') {
+        // NOTE: You must ensure this path is correct relative to where your web server serves files.
+        return './Mars Exploration Rover.urdf.xacro'; 
+    }
+    return null;
+};
+
+// --- Component Interfaces ---
 
 interface SceneObjectProps {
   object: MeshData;
   isSelected: boolean;
-  onSelect: (objectId: string, mesh: Mesh | null) => void;
+  // This type is correct for this component, allowing for complex groups/Object3Ds.
+  onSelect: (objectId: string, mesh: Mesh | Group | Object3D | null) => void; 
   showTransformControls?: boolean;
   transformMode: 'translate' | 'rotate' | 'scale';
 }
@@ -19,25 +43,76 @@ const SceneObject: React.FC<SceneObjectProps> = ({
   showTransformControls = false,
   transformMode 
 }) => {
-  const meshRef = useRef<Mesh>(null);
+  // Use a Group ref as the root container, as it can hold either a single Mesh or a complex hierarchy.
+  const groupRef = useRef<Group>(null);
+  
+  // State to hold the loaded URDF hierarchy (THREE.Object3D)
+  const [robotModel, setRobotModel] = useState<THREE.Object3D | null>(null);
 
+  // Determine if we should attempt to load a URDF
+  const isUrdf = object.type.toLowerCase() === 'urdf';
+  const urdfUrl = isUrdf ? getUrdfUrl(object) : null;
+
+  // --- URDF/XACRO Loading Effect ---
   useEffect(() => {
-    console.log(`🎯 SceneObject MOUNTED: ${object.id}`, {
-      type: object.type,
-      position: object.position,
-      vertices: object.vertices?.length,
-      faces: object.faces?.length,
-      material: object.material,
-      meshRef: meshRef.current ? 'SET' : 'NULL'
-    });
-  }, [object.id]);
+    if (!urdfUrl) {
+      setRobotModel(null);
+      return;
+    }
 
-  // Geometry Creation Logic
+    console.log(`🤖 Starting URDF Load for: ${urdfUrl}`);
+    setRobotModel(null); // Clear previous model while loading
+
+    const xacroLoader = new XacroLoader();
+    
+    // NOTE: Removed xacroLoader.workingPath = LoaderUtils.extractUrlBase(urdfUrl);
+    // XacroLoader does not have a workingPath property.
+
+    xacroLoader.load(
+        urdfUrl, 
+        (xml) => {
+            try {
+                const urdfLoader = new URDFLoader();
+                // This is crucial for URDFLoader to find mesh files (STL, DAE, etc.)
+                urdfLoader.workingPath = LoaderUtils.extractUrlBase(urdfUrl);
+                
+                // This is crucial for using geometry files like STL
+                urdfLoader.manager = THREE.DefaultLoadingManager;
+
+                const robot = urdfLoader.parse(xml);
+                robot.name = `URDF:${object.id}`;
+                
+                // Apply scale and rotation if needed (URDF often uses meters, so scale is common)
+                robot.scale.set(object.scale[0], object.scale[1], object.scale[2]);
+
+                setRobotModel(robot);
+                console.log(`✅ URDF Load complete for ${object.id}. Robot has ${robot.children.length} top-level elements.`);
+                
+            } catch (error) {
+                console.error(`🔴 Error parsing URDF for ${object.id}:`, error);
+            }
+        }, 
+        // FIX: The XacroLoader's signature is (url, onLoad, onError), requiring only 3 arguments.
+        // We removed the 'undefined' onProgress callback.
+        (error: any) => {
+            console.error(`🔴 Error loading XACRO file for ${object.id}:`, error);
+        }
+    );
+    
+    // Cleanup function (optional, but good practice if URDFLoader had a robust dispose method)
+    return () => {
+        // No explicit cleanup needed here for the loaders, but useful for cancelling ongoing loads
+    };
+  }, [urdfUrl, object.id, object.scale]); // Dependency on URL and scale
+
+  // --- Geometry Creation Logic (Primitives) ---
   const MeshComponent = useMemo(() => {
+    if (isUrdf) return null; // Skip primitive mesh generation for URDF type
+
     // Default size for primitives if parameters are missing
     const DEFAULT_UNIT = 1.0; 
     
-    // 💡 FIX 1: Determine the base geometry type by stripping 'ai_' or mapping 'boolean'
+    // 💡 Determine the base geometry type by stripping 'ai_' or mapping 'boolean'
     const typeKey = object.type.toLowerCase();
     let baseType = typeKey;
     if (typeKey.startsWith('ai_')) {
@@ -76,7 +151,6 @@ const SceneObject: React.FC<SceneObjectProps> = ({
         if (object.vertices && object.faces) {
           const geometry = new BufferGeometry();
           
-          // Vertices and Faces from backend are already flattened arrays of numbers
           const flatVertices = object.vertices.flat();
           const flatIndices = object.faces.flat();
           
@@ -89,57 +163,76 @@ const SceneObject: React.FC<SceneObjectProps> = ({
         // Fallthrough if mesh data is missing
         
       default:
-        console.warn(`Unknown object type or missing parameters for ${object.id}: ${object.type}. Falling back to a visible box.`);
-        // Fallback to a visible size box (e.g., 4x4x4) to signal an issue
+        console.warn(`Unknown object type or missing parameters for ${object.id}: ${object.type}. Rendering a fallback box.`);
         return <boxGeometry args={[4, 4, 4]} />;
     }
-  }, [object]); 
+  }, [object, isUrdf]); // Added isUrdf dependency
 
   const handleClick = (e: any) => {
     e.stopPropagation();
-    onSelect(object.id, meshRef.current);
+    // Select the whole group/model
+    onSelect(object.id, groupRef.current);
   };
   
   const [x, y, z] = object.position || [0, 0, 0];
-  
-  // 💡 FIX 2: REMOVE the SCALING_FACTOR multiplier. 
-  // The position received from the backend is already scaled (e.g., 4x).
   const scaledPosition = [x, y, z] as [number, number, number];
   
-  console.log(`RENDER ${object.type}: Pos=${scaledPosition}`);
-  
+  // Conditionally render based on type (URDF or Primitive)
+  const content = isUrdf 
+    ? (
+        // Render the loaded robot model as a primitive
+        robotModel 
+            ? <primitive object={robotModel} /> 
+            : <group>
+                {/* Simple loading indicator/placeholder for URDF */}
+                <mesh>
+                    <sphereGeometry args={[0.5, 32, 32]} />
+                    <meshBasicMaterial color={'orange'} wireframe={true} />
+                </mesh>
+            </group>
+    ) 
+    : (
+        // Render the primitive/custom mesh
+        <mesh
+            castShadow
+            receiveShadow
+        >
+            {MeshComponent} 
+            <meshStandardMaterial 
+                color={object.material?.color || (isSelected ? '#4f8cff' : '#ff6b6b')}
+                metalness={object.material?.metalness ?? 0.2}
+                roughness={object.material?.roughness ?? 0.6}
+                emissive={object.material?.emissive || '#000000'}
+                emissiveIntensity={object.material?.emissiveIntensity ?? 0}
+                transparent={object.material?.transparent || false}
+                opacity={object.material?.opacity || 1}
+                wireframe={object.material?.wireframe || false}
+                needsUpdate={true}
+            />
+        </mesh>
+    );
+
+  // The root element is now a <group> to correctly contain the complex URDF hierarchy or a simple <mesh>.
   return (
-    <mesh
-      ref={meshRef}
+    <group
+      ref={groupRef}
       onClick={handleClick}
-      position={scaledPosition} // Use un-scaled position
+      position={scaledPosition}
       rotation={object.rotation}
-      scale={object.scale}
-      castShadow
-      receiveShadow
+      // Note: scale is applied to the robotModel primitive object for URDF, 
+      // but kept on the group for primitives.
+      scale={isUrdf ? [1, 1, 1] : object.scale} 
     >
-      {MeshComponent} 
-      <meshStandardMaterial 
-        color={object.material?.color || (isSelected ? '#4f8cff' : '#ff6b6b')}
-        metalness={object.material?.metalness ?? 0.2}
-        roughness={object.material?.roughness ?? 0.6}
-        emissive={object.material?.emissive || '#000000'}
-        emissiveIntensity={object.material?.emissiveIntensity ?? 0}
-        transparent={object.material?.transparent || false}
-        opacity={object.material?.opacity || 1}
-        wireframe={object.material?.wireframe || false}
-        // Add these to ensure updates are applied
-        needsUpdate={true}
-      />
+      {content}
       
-      {showTransformControls && meshRef.current && (
-        <TransformControls 
+      {showTransformControls && groupRef.current && (
+        <TransformControls 
           mode={transformMode} 
-          object={meshRef.current} 
-          onMouseUp={() => onSelect(object.id, meshRef.current)} // This correctly updates transform
+          object={groupRef.current} 
+          onMouseUp={() => onSelect(object.id, groupRef.current)} // Use groupRef
         />
       )}
-    </mesh>
+    </group>
   );
 };
 
